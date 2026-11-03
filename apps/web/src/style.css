@@ -109,3 +109,26 @@ footer{color:#738da8;font-size:10px;display:flex;justify-content:space-between;f
  .gauge-aura.enhanced .aura-flow{min-height:140px}
  .meter-toolbar select{font-size:11px}
 }
+
+
+/*
+ * Aura Classic: source DOM order is power -> energy flow -> speed.
+ * CSS grid auto-placement put the full-width flow in row 2 and speed in row 3.
+ * Explicitly place both round gauges in the SAME FIRST ROW on small phones.
+ * Enhanced uses its own three-column layout above; do not override it.
+ */
+.gauge-aura:not(.enhanced) .aura-power {
+  grid-column: 1;
+  grid-row: 1;
+}
+.gauge-aura:not(.enhanced) .aura-velocity {
+  grid-column: 2;
+  grid-row: 1;
+}
+.gauge-aura:not(.enhanced) .aura-flow {
+  grid-column: 1 / -1;
+  grid-row: 2;
+}
+.gauge-aura .aura-analog {
+  min-width: 0;
+}
