@@ -174,8 +174,11 @@ function simulateHybrid(state: DriveState, controls: DriverInput, dt: number): D
   // The Prius planetary relation (illustrative gearset; not OEM tooth counts):
   // (Ns + Nr) * carrier = Ns * sun + Nr * ring.
   const ns = 30, nr = 78;
+  // Telemetry must be consistent with the velocity at the END of this step.
+  const updatedWheelRpm = newSpeed / (2 * Math.PI * TYRE_RADIUS_M) * 60;
+  const updatedRingRpm = updatedWheelRpm * 3.0;
   const mg1Rpm = isSeries ? (running ? rpm : 0)
-    : ((ns + nr) * rpm - nr * ringRpm) / ns;
+    : ((ns + nr) * rpm - nr * updatedRingRpm) / ns;
 
   return {
     ...state,
@@ -192,7 +195,7 @@ function simulateHybrid(state: DriveState, controls: DriverInput, dt: number): D
     motorPowerKw, generatorPowerKw,
     regenPowerKw: Math.max(0, -regenMechKw * REGEN_EFFICIENCY),
     engineMechanicalKw,
-    mg1Rpm, mg2Rpm: isSeries ? wheelRpm * 7.2 : ringRpm
+    mg1Rpm, mg2Rpm: isSeries ? updatedWheelRpm * 7.2 : updatedRingRpm
   };
 }
 
