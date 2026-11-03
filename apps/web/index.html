@@ -4,6 +4,12 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
   <meta name="theme-color" content="#0a1322"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+  <meta name="apple-mobile-web-app-title" content="EngineSoundLab"/>
+  <link rel="manifest" href="./manifest.webmanifest"/>
+  <link rel="icon" type="image/svg+xml" href="./icon.svg"/>
+  <link rel="apple-touch-icon" href="./apple-touch-icon.png"/>
   <meta name="description" content="録音なしのリアルタイム合成エンジン音をスマホで操作するWebデモ"/>
   <title>EngineSoundLab — P1 Sound Profiles</title>
 </head>
@@ -11,7 +17,10 @@
   <main class="app">
     <header class="topbar">
       <div><small class="eyebrow">PROCEDURAL SOUND LAB / P1</small><h1>EngineSoundLab</h1></div>
-      <span class="status" id="status" role="status">停止中</span>
+      <div class="status-cluster">
+        <span class="status" id="status" role="status">停止中</span>
+        <span class="offline-status" id="offline-status" role="status" aria-live="polite">PWAを確認中</span>
+      </div>
     </header>
     <section class="intro">
       <h2>アクセルで、音をつくる。</h2>
