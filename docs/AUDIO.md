@@ -1,36 +1,30 @@
-# Audio engine contract — synthesis-first v0.6
+# Audio engine contract — synthesis-first v0.7
 
-## Non-negotiable product priority
-**Procedural synthesis is the primary and fully functional sound path.** The first running demo must produce acceleration sound without loading recordings. HYBRID is an optional future extension, not needed for baseline release or CI.
+## Current implementation (P1 first slice)
+- The runnable mobile Web demo uses a **generic I4 4-stroke** engine profile. Not a verified Prius, Aura or other manufacturer's sound.
+- `apps/web/public/synth-core.js` is the pure, reusable DSP implemented as original source code. `engine-worklet.js` is the AudioWorklet bridge.
+- The 720-degree engine cycle has four 180-degree-spaced firing events with small per-cylinder strength variation. Each excites a fast/slow pressure envelope.
+- Exhaust low-frequency pressure, two fixed-frequency acoustic resonators (118 Hz, 247 Hz), load-dependent pressure edge, intake air noise, mechanical order, and speed-dependent road noise are separate DSP layers.
+- The DSP receives RPM, engine load, throttle, speed, combustion and application-active independently; both the audio gate and combustion have smoothed control inputs.
+- A DC blocking filter, bounded saturation, and Web Audio dynamics compressor are used to limit output; this is not an acoustic loudness certification.
+- `tests/synth-core.test.mjs` renders this **exact DSP code** offline and checks event cadence, amplitude, load response, finite values, fade continuity, no-combustion behavior and determinism.
+- `tests/worklet-bridge.test.mjs` mocks the browser worklet host and verifies registration and audio output.
+- Web AudioWorklet unavailable -> explicitly labeled simplified oscillator fallback (still synth).
+- No prerecorded clips, factory ECU maps, brand audio samples or imported third-party synthesizer code.
 
-## Input and timing
-The authoritative simulation exports RPM, engine load, engine state, combustionActive, motor speed and load, road speed and timestamp. Audio ignores visual needle smoothing. Drive physics on a fixed-step clock and schedule audio via AudioContext timing. Avoid per-render allocations.
+## Sound requirements / future slices
+- **Procedural SYNTH remains the default and essential sound path.**
+- P1 later: more than one cylinder configuration, real firing order/bank phasing, improved exhaust pipe / muffler models, engine-specific ignition behavior, measurements against recordings (where lawful), proper motor/road crossfades and offline spectral diagnostics.
+- P2: when powertrain controllers are implemented, engine `combustion` will follow actual engine state; stopped engine must not produce synthetic combustion even when the vehicle moves.
+- P5 optional HYBRID may use appropriately licensed RPM × load recordings, but may not block the synthesized simulator.
 
-## Core synth pipeline
-1. Per-cylinder combustion/ignition geometry at 720 degrees for 4-stroke engines (never just raw RPM -> oscillator pitch).
-2. Intake, exhaust and bank-resonator sound; allow load/throttle derivative to modify timbre independently of RPM.
-3. Engine starter/stopping and motoring distinction, motor whine/road-wind bed as separate controllable voices.
-4. Stable interpolation/AudioParam smoothing, clipping guard and fallback for unsupported AudioWorklet.
-5. Save measurable sample-to-sample continuity, RMS and peak diagnostics; subjective comparison needed for realism claims.
+## API timing / lifecycle
+- Authoritative simulation exports RPM, load and speed independently of any gauge-needle animation. The UI passes throttle directly as an additional acoustic parameter.
+- Fixed-step vehicle simulation; audio via worklet sample clock and AudioParam scheduling, no per-sample object allocations.
+- Audio must start after user activation and suspend on backgrounding; do not automatically resume microphone/speaker access without user intent.
+- The compressor, output gain and worklet are all released by `dispose`; app lifecycle state is separate from ignition state.
 
-## Optional rendering mode
-- `SYNTH`: default, always available, offline-capable, no sample dependencies.
-- `HYBRID`: after P4 only, use licensed RPM/load recordings blended with synthesis and equal-power crossfades.
-- Switching audio mode must preserve simulation state and avoid level jumps.
-- Missing authorized sample assets must show an explicit SYNTH fallback. Do not relabel synthesis as recorded audio.
-
-## State/events
-- Engine state: STOPPED, CRANKING, RUNNING, MOTORING, STOPPING.
-- Combustion audio must be silent when combustionActive=false; remaining motor/road layers may continue.
-- Timestamp and queue transient events once.
-- Audio must suspend on backgrounding and reactivate through user gesture where browser requires.
-- Dispose graph nodes/buffers on vehicle change or teardown.
-
-## Performance / safety targets — not yet verified
-- Target audible throttle response <=100 ms, to be confirmed on Android Chrome and iPhone Safari.
-- No unexpected clicks, clipping or gaps during RPM transitions and start/stop.
-- Stereo/output limiting must be comfortable at reasonable device volume (never force maximum volume).
-- Prioritize audio stability over meter animations under CPU pressure.
-
-## Asset policy
-Do not bundle unlicensed recordings, trademark artwork, music, or third-party source code. Test signals must be original. The synthesized result is an approximation until listening and real-car measurements validate it.
+## Unverified / measurement goals
+- Real-phone listening quality, audible latency, battery draw, dynamic range and ten-minute stability are **not yet measured on the new P1 implementation**.
+- Targets: 30+ fps gauge, aim for <=100 ms throttle-to-audible change, no audible clicks or persistent buffer dropouts. These are targets, not claimed outcomes.
+- High-order resonance tuning / exact real-car authenticity require controlled listening and proper reference material.

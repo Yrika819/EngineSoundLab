@@ -54,7 +54,7 @@ function animation(timestamp:number):void {
  accumulator+=Math.min(0.05,Math.max(0,(timestamp-lastFrame)/1000));lastFrame=timestamp;
  let count=0;
  while(accumulator>=0.01 && count++<5){vehicle=step(vehicle,input,0.01);accumulator-=0.01;}
- audio?.update(vehicle);draw();requestAnimationFrame(animation);
+ audio?.update(vehicle, input.throttle);draw();requestAnimationFrame(animation);
 }
 async function halt():Promise<void> {
  running=false;clearPedals();lastFrame=0;accumulator=0;
