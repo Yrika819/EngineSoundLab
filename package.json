@@ -1,0 +1,17 @@
+{
+  "name": "engine-sound-lab",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Mobile-first engine sound simulator - design baseline",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "node --test tests/*.test.mjs",
+    "check": "npm run typecheck && npm test"
+  },
+  "devDependencies": {
+    "typescript": "~5.9.3"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

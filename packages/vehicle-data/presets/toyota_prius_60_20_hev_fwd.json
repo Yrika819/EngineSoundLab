@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "id": "toyota_prius_60_20_hev_fwd",
+  "manufacturer": "Toyota",
+  "model": "Prius",
+  "modelYear": 2025,
+  "market": "JP",
+  "powertrain": {
+    "kind": "POWER_SPLIT_HEV",
+    "controllerId": "toyota-ths",
+    "configurationId": "prius-60-2.0-hev-fwd"
+  },
+  "chassisId": "prius-60-fwd-pending",
+  "engineId": "prius-20-hev-pending",
+  "batteryId": "prius-60-hev-pending",
+  "motorIds": [
+    "mg1",
+    "mg2"
+  ],
+  "audioProfileId": "prius-20-hev-synth-pending",
+  "gaugeThemeId": "toyota-prius-60",
+  "evidenceId": "prius-60-2.0-hev-sources-pending"
+}

@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "id": "nissan_aura_fe13_epower_fwd",
+  "manufacturer": "Nissan",
+  "model": "Aura",
+  "modelYear": 2025,
+  "market": "JP",
+  "powertrain": {
+    "kind": "SERIES_HEV",
+    "controllerId": "nissan-epower-gen2",
+    "configurationId": "aura-fe13-fwd"
+  },
+  "chassisId": "aura-fe13-fwd-pending",
+  "engineId": "hr12de-epower-pending",
+  "batteryId": "aura-fe13-pending",
+  "motorIds": [
+    "traction"
+  ],
+  "audioProfileId": "aura-gen2-synth-pending",
+  "gaugeThemeId": "nissan-aura-fe13",
+  "evidenceId": "aura-fe13-sources-pending"
+}
