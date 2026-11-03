@@ -132,3 +132,31 @@ footer{color:#738da8;font-size:10px;display:flex;justify-content:space-between;f
 .gauge-aura .aura-analog {
   min-width: 0;
 }
+
+/* P4 mobile stability + offline state, standalone home-screen safe areas. */
+.status-cluster{display:flex;flex-direction:column;align-items:flex-end;gap:4px;min-width:0}
+.offline-status{font-size:10px;color:#8eaccd;line-height:1.25;text-align:right;max-width:160px}
+.app,.instrument,.controls,.vehicle{min-width:0}
+body{overscroll-behavior-x:none}
+.pedals{min-width:0}
+@media(max-width:390px){
+ .app{padding-left:max(12px,env(safe-area-inset-left));padding-right:max(12px,env(safe-area-inset-right))}
+ .topbar h1{font-size:19px}
+ .status{font-size:10px;padding:6px 9px}
+ .offline-status{font-size:9px;max-width:125px}
+ .instrument{padding:10px 8px}
+ .aura-layout{gap:5px}
+ .aura-analog{min-width:0;max-width:100%;padding:5px 2px}
+ .aura-analog>strong{font-size:clamp(28px,10vw,49px)}
+ .meter-toolbar{flex-wrap:wrap}
+ .meter-toolbar select{max-width:100%;flex:1;min-width:155px}
+ .pedals{gap:8px}
+ .pedal{padding-right:10px;padding-left:30px}
+ .pedal .pedal-current{font-size:26px}
+}
+@media(max-height:720px) and (orientation:landscape){
+ .app{min-height:auto}
+ .instrument{min-width:0}
+ .controls{min-width:0}
+ .pedal{min-height:110px}
+}
