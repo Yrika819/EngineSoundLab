@@ -36,3 +36,21 @@ Primary manufacturer sources:
 - Nissan Aura: https://www3.nissan.co.jp/vehicles/new/aura.html
 
 All numeric presets need a source marker: `official`, `measured`, `estimated`, or `placeholder`. Specific numerical vehicle specs should be verified before being labeled official.
+
+## P2 prototype implementation (estimated, NOT manufacturer calibrated)
+
+**Implemented:** `apps/web/src/powertrains.ts` now has distinct `prius_60_hev` (conceptual power-split) and `aura_fe13_epower` (series HEV) models. The mobile cockpit offers a selector, SOC/engine-phase/motor kW/generator kW readout, and original motor audio that continues during electric-only drive.
+
+**Prius:** engine mechanical wheel traction plus traction-motor support; conceptual MG1/MG2 and planetary relationship `(Ns+Nr)*carrier = Ns*sun + Nr*ring`. Teeth Ns=30, Nr=78 and final output gearing are **illustrative**, not Toyota part specs.
+
+**Aura:** all wheel torque is from the electric motor; engine mechanical energy flows only to a generator. Its RPM demand is based on load and SOC, not wheel RPM. The controller uses approximate start thresholds and hysteresis.
+
+**Energy sign conventions:** `motorPowerKw` is mechanical wheel power (+drive, -regen), `regenPowerKw` a positive display-only recovered electrical amount, `batteryPowerKw = motorElectricalKw + auxiliaries - generatorPowerKw`, and SOC integrates in kWh. Recovered power is never counted twice in wheel braking.
+
+**Calibration caveat:** body mass, motor torque/power, battery usable capacity, estimated efficiencies, hysteresis thresholds, conceptual gear teeth and power limits are *placeholders*. Battery SOC is clamped but full electrical current/power limiting at SOC extrema is not yet implemented. This is a functional topology demo rather than a validated vehicle digital twin.
+
+The audio worklet has independent `combustion`, `motor` and `motorRpm` channels. Prius defaults to synthetic I4; Aura defaults to synthetic I3. Manual sound profile selection changes acoustics only, not vehicle performance.
+
+Validation: `tests/hybrid-powertrains.test.ts`, `tests/hybrid-audio.test.mjs`, `tests/worklet-bridge.test.mjs`. See manufacturer overviews for the public drivetrain topology:
+- https://toyota.jp/prius/
+- https://www.nissan-global.com/JP/INNOVATION/TECHNOLOGY/ARCHIVE/E_POWER/
