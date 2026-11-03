@@ -26,3 +26,9 @@ On touchscreens, the accelerator and brake now act as **position-based vertical 
 ## I3 / I4 / I6 synthesized sound profiles
 
 The UI now includes an **audio-only** selector for inline 3-, 4- and 6-cylinder four-stroke configurations. The engine firing events change from every 240° (I3) to 180° (I4) or 120° (I6) over a 720° crank cycle, with distinct pulse gain and mechanical-order coloration. The selector can be changed while playing without restarting the driving simulation. **Vehicle performance/gear ratios do not change yet**, so this is a sound-engine study and not a full I3/I6 vehicle simulation. No recorded samples or factory-calibrated engine profiles are included.
+
+## P2 estimated hybrid topologies
+
+The page can select a generic gasoline drivetrain, a conceptual Toyota Prius 60-series power-split HEV, or a conceptual Nissan Aura FE13 series HEV. Displayed hybrid data includes SOC, engine phase, drive motor and generator power; motor whine is synthesized separately from combustion. Manufacturer ECU thresholds, motor/battery ratings and power-split tooth counts are **not calibrated**, and numeric values are placeholders. Prius sounds default to I4 and Aura to I3; the user can override sound cylinder count independently of the simulated drivetrain.
+
+Tests cover e-POWER engine/wheel disconnection, Prius planetary kinematics, energy accounting, start/stop state, regeneration and EV-only acoustic output.

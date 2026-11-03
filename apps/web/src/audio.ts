@@ -1,4 +1,4 @@
-import type { VehicleState } from "./physics";
+import type { DriveState } from "./powertrains";
 
 export type EngineSoundProfile = "i3" | "i4" | "i6";
 
@@ -66,7 +66,7 @@ export class EngineAudio {
     this.setActive(1);
   }
 
-  update(state: VehicleState, throttleInput = state.load): void {
+  update(state: DriveState, throttleInput = state.load): void {
     if (!this.active || !this.context) return;
     const now = this.context.currentTime;
     const rpm = Number.isFinite(state.rpm) ? state.rpm : 850;
@@ -76,10 +76,18 @@ export class EngineAudio {
       this.worklet.parameters.get("load")?.setTargetAtTime(load, now, 0.025);
       this.worklet.parameters.get("throttle")?.setTargetAtTime(Math.max(0, Math.min(1, throttleInput)), now, 0.025);
       this.worklet.parameters.get("speed")?.setTargetAtTime(Math.max(0, state.speedMps), now, 0.04);
-      this.worklet.parameters.get("combustion")?.setTargetAtTime(1, now, 0.025);
+      this.worklet.parameters.get("combustion")?.setTargetAtTime(state.combustionActive?1:0,now,0.025);
+      this.worklet.parameters.get("motor")?.setTargetAtTime(
+        Math.min(1,Math.abs(state.motorPowerKw)/65),now,0.03);
+      this.worklet.parameters.get("motorRpm")?.setTargetAtTime(
+        Math.max(0,Math.abs(state.mg2Rpm)),now,0.035);
     } else {
       const cylinders = this.profile === "i3" ? 3 : this.profile === "i6" ? 6 : 4;
-      this.fallback?.frequency.setTargetAtTime(Math.max(20, rpm * cylinders / 120), now, 0.035);
+      const hz=state.combustionActive?Math.max(20,rpm*cylinders/120):
+        Math.max(80,Math.abs(state.mg2Rpm)*6/60);
+      this.fallback?.frequency.setTargetAtTime(hz,now,0.035);
+      this.master?.gain.setTargetAtTime(state.combustionActive?0.32:
+        Math.min(0.14,Math.abs(state.motorPowerKw)/400),now,0.06);
       this.filter?.frequency.setTargetAtTime(400 + 2400 * load, now, 0.05);
     }
   }

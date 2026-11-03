@@ -30,7 +30,7 @@ export class EngineSynthCore {
     this.throttle = 0;
     this.speed = 0;
     this.active = 0;
-    this.combustion = 1;
+    this.combustion = 0; // Default silence until engine combustion is explicitly enabled.
     this.crankAngle = 0;
     this.nextFiring = 0;
     this.firingEvents = 0;
@@ -61,6 +61,10 @@ export class EngineSynthCore {
     this.resBSquared = bRadius * bRadius;
     this.resAGain = 1 - aRadius;
     this.resBGain = 1 - bRadius;
+    this.motorLevel = 0;
+    this.motorRpm = 0;
+    this.motorPhase = 0;
+    this.motorLag = Math.exp(-1 / (rate * 0.035));
     this.setProfile(profileId);
   }
 
@@ -93,7 +97,8 @@ export class EngineSynthCore {
    * @param {number} targetActive app/audio gate, 0..1
    * @param {number} targetCombustion 0..1, distinct from motor/road sounds
    */
-  next(targetRpm, targetLoad, targetThrottle, targetSpeed, targetActive = 1, targetCombustion = 1) {
+  next(targetRpm, targetLoad, targetThrottle, targetSpeed, targetActive = 1,
+       targetCombustion = 1, targetMotor = 0, targetMotorRpm = 0) {
     const rpm = clamp(targetRpm, 0, 8000, 850);
     const load = clamp(targetLoad, 0, 1);
     const throttle = clamp(targetThrottle, 0, 1);
@@ -106,6 +111,10 @@ export class EngineSynthCore {
     this.speed = this.speed * this.speedLag + speed * (1 - this.speedLag);
     this.active = this.active * this.gateLag + active * (1 - this.gateLag);
     this.combustion = this.combustion * this.gateLag + combustion * (1 - this.gateLag);
+    this.motorLevel = this.motorLevel*this.motorLag +
+      clamp(targetMotor,0,1)*(1-this.motorLag);
+    this.motorRpm = this.motorRpm*this.motorLag +
+      clamp(targetMotorRpm,0,20000)*(1-this.motorLag);
 
     // Configurable four-stroke cycle, 720 crank degrees (I3/I4/I6).
     // Up to 8,000 RPM at 8 kHz is still under 6 degrees per sample.
@@ -158,7 +167,12 @@ export class EngineSynthCore {
     const roadLevel = Math.pow(Math.min(1, this.speed / 40), 1.3);
     const rolling = this.roadLow * 0.13 * roadLevel;
 
-    const mix = (exhaust + intake + mechanical) * this.combustion + rolling;
+    // Motor voice stays audible during EV operation with zero combustion.
+    const motorHz = clamp(this.motorRpm / 60 * 6, 30, 2200);
+    this.motorPhase = (this.motorPhase + 2*Math.PI*motorHz/this.rate) % (2*Math.PI);
+    const motorVoice = (Math.sin(this.motorPhase) +
+      0.25*Math.sin(2*this.motorPhase+0.12)) * this.motorLevel * 0.11;
+    const mix = (exhaust + intake + mechanical) * this.combustion + rolling + motorVoice;
     // DC block + bounded saturation; no sample value leaves [-0.54, +0.54].
     this.hp = mix - this.prevMix + 0.995 * this.hp;
     this.prevMix = mix;

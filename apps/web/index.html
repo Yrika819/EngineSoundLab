@@ -15,10 +15,18 @@
     </header>
     <section class="intro">
       <h2>アクセルで、音をつくる。</h2>
-      <p>録音なしのリアルタイム合成。3・4・6気筒の点火を切替できる合成音の試作版です。実車の正確な再現ではありません。</p>
+      <p>録音なしのリアルタイム合成。3・4・6気筒の合成音とTHS・e-POWERの駆動方式を試せます。制御パラメーターは推定値で実車の完全再現ではありません。</p>
     </section>
     <section class="vehicle">
-      <div><small>VEHICLE SIMULATION</small><strong>GENERIC AUTO</strong><span>走行物理は共通の試作モデル</span></div>
+      <div class="vehicle-profile-card">
+        <label for="vehicle-profile">VEHICLE SIMULATION</label>
+        <select id="vehicle-profile" aria-label="車両と駆動方式の選択">
+          <option value="generic_i4" selected>汎用ガソリン車（AT）</option>
+          <option value="prius_60_hev">プリウス60 HEV（近似THS）</option>
+          <option value="aura_fe13_epower">オーラFE13（近似e-POWER）</option>
+        </select>
+        <span id="powertrain-notice">汎用ガソリン車の走行モデル（試作）</span>
+      </div>
       <div class="sound-profile-card">
         <label for="sound-profile">SYNTH · SOUND PROFILE</label>
         <select id="sound-profile" aria-label="エンジン合成音の気筒数">
@@ -39,6 +47,12 @@
         </div>
       </div>
       <div class="telemetry"><span>ENGINE LOAD <b id="load">0%</b></span><span>THROTTLE <b id="throttle">0%</b></span></div>
+      <div class="energy-panel" id="energy-panel" hidden>
+        <div><small>BATTERY SOC</small><strong id="battery-soc">63%</strong></div>
+        <div><small>ENGINE STATE</small><strong id="engine-state">停止</strong></div>
+        <div><small>MOTOR POWER</small><strong id="motor-power">0.0 kW</strong></div>
+        <div><small>GENERATOR</small><strong id="generator-power">0.0 kW</strong></div>
+      </div>
     </section>
     <section class="controls">
       <button id="power" class="power" type="button">エンジンを始動 ▶</button>
@@ -61,7 +75,7 @@
         </button>
       </div>
     </section>
-    <footer>走行モードのみ・空ぶかしは後日実装 <span>プリウスTHS／オーラe-POWERは開発予定</span></footer>
+    <footer>走行モードのみ・空ぶかしは後日実装 <span>THS／e-POWERは近似モデル（実車未校正）</span></footer>
   </main>
   <script type="module" src="/src/main.ts"></script>
 </body>

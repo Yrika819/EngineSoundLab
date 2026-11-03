@@ -1,6 +1,7 @@
 import "./style.css";
-import { clamp, initialState, step, REDLINE_RPM } from "./physics";
-import type { DriverInput, VehicleState } from "./physics";
+import { clamp, REDLINE_RPM } from "./physics";
+import type { DriverInput } from "./physics";
+import { advanceDrive, makeDriveState, type DriveState, type VehicleId } from "./powertrains";
 import { EngineAudio } from "./audio";
 import type { EngineSoundProfile } from "./audio";
 import { pedalOpeningFromPosition } from "./pedal";
@@ -16,12 +17,19 @@ const rpm=el<HTMLElement>("rpm"),speed=el<HTMLElement>("speed"),gear=el<HTMLElem
 const load=el<HTMLElement>("load"),throttle=el<HTMLElement>("throttle"),gasVal=el<HTMLElement>("gas-value"),brakeVal=el<HTMLElement>("brake-value");
 const dial=el<HTMLDivElement>("dial");
 const soundProfile=el<HTMLSelectElement>("sound-profile");
+const vehicleProfile=el<HTMLSelectElement>("vehicle-profile");
+const energyPanel=el<HTMLElement>("energy-panel");
+const batterySoc=el<HTMLElement>("battery-soc");
+const enginePhaseText=el<HTMLElement>("engine-state");
+const motorPower=el<HTMLElement>("motor-power");
+const generatorPower=el<HTMLElement>("generator-power");
+const powertrainNotice=el<HTMLElement>("powertrain-notice");
 soundProfile.addEventListener("change",()=>{
   const profile=soundProfile.value as EngineSoundProfile;
   audio?.setProfile(profile);
   hint.textContent="合成音を"+soundProfile.selectedOptions[0].text+"に切替。車両の走行モデルは共通です。";
 });
-let vehicle:VehicleState=initialState();
+let vehicle:DriveState=makeDriveState("generic_i4");
 const input:DriverInput={throttle:0,brake:0};
 let running=false,busy=false,lastFrame=0,accumulator=0;
 let audio:EngineAudio|null=null;
@@ -79,16 +87,41 @@ function bindPedal(button:HTMLButtonElement,key:keyof DriverInput):void {
  sync();
 }
 bindPedal(gas,"throttle");bindPedal(brake,"brake");
+vehicleProfile.addEventListener("change",()=>{
+ const id=vehicleProfile.value as VehicleId;
+ if(!["generic_i4","prius_60_hev","aura_fe13_epower"].includes(id))return;
+ clearPedals();
+ vehicle=makeDriveState(id);
+ accumulator=0;lastFrame=0;
+ const profile=id==="aura_fe13_epower"?"i3":"i4";
+ soundProfile.value=profile;
+ audio?.setProfile(profile);
+ powertrainNotice.textContent=id==="generic_i4"
+   ?"汎用ガソリン車の走行モデル（試作）"
+   :"メーカー未公開の制御値は推定としたハイブリッド近似モデル";
+ hint.textContent="車両モデルを変更しました。走行状態を初期化します。";
+ draw();
+});
 const clearPedals=()=>cancelPedals.forEach(clear=>clear());
 
 function draw():void {
  rpm.textContent=Math.round(vehicle.rpm).toLocaleString("ja-JP");
  speed.textContent=String(Math.round(vehicle.speedMps*3.6));
- gear.textContent="D"+vehicle.gear;
+ gear.textContent=vehicle.vehicleId==="generic_i4"?"D"+vehicle.gear:"D";
  load.textContent=Math.round(vehicle.load*100)+"%";
  throttle.textContent=Math.round(input.throttle*100)+"%";
  gasVal.textContent=Math.round(input.throttle*100)+"%";
  brakeVal.textContent=Math.round(input.brake*100)+"%";
+ const isHybrid=vehicle.vehicleId!=="generic_i4";
+ energyPanel.hidden=!isHybrid;
+ if(isHybrid){
+  batterySoc.textContent=Math.round((vehicle.batterySoc??0)*100)+"%";
+  enginePhaseText.textContent=vehicle.enginePhase==="RUNNING"?"稼働中":
+    vehicle.enginePhase==="STARTING"?"始動中":
+    vehicle.enginePhase==="STOPPING"?"停止動作":"停止";
+  motorPower.textContent=vehicle.motorPowerKw.toFixed(1)+" kW";
+  generatorPower.textContent=vehicle.generatorPowerKw.toFixed(1)+" kW";
+ }
  dial.style.setProperty("--rpm-angle",(vehicle.rpm/REDLINE_RPM*300).toFixed(1)+"deg");
 }
 function animation(timestamp:number):void {
@@ -96,7 +129,7 @@ function animation(timestamp:number):void {
  if(!lastFrame)lastFrame=timestamp;
  accumulator+=Math.min(0.05,Math.max(0,(timestamp-lastFrame)/1000));lastFrame=timestamp;
  let count=0;
- while(accumulator>=0.01 && count++<5){vehicle=step(vehicle,input,0.01);accumulator-=0.01;}
+ while(accumulator>=0.01 && count++<5){vehicle=advanceDrive(vehicle,input,0.01);accumulator-=0.01;}
  audio?.update(vehicle, input.throttle);draw();requestAnimationFrame(animation);
 }
 async function halt():Promise<void> {
