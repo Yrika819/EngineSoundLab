@@ -15,7 +15,7 @@ The first Web prototype is a **generic inline-4 gasoline engine**. It is not a v
 - Hold brake to decelerate; speed and RPM appear in a generic meter.
 - Leaving the tab clears inputs and suspends audio. A user gesture is required to resume.
 - Where AudioWorklet is unsupported, a simpler oscillator sound path is used and labeled accordingly.
-- PWA/offline caching is **not implemented yet**. Approximate THS and e-POWER controllers exist, but they are **not OEM validated**.
+- PWA/offline caching is available after the first successful online visit. Approximate THS and e-POWER controllers exist but are not OEM calibrated; actual device QA remains pending.
 
 `npm run build` outputs static files to `dist/web`, suitable for future GitHub Pages deployment.
 
@@ -47,3 +47,7 @@ The illustrations and normalized gauge scales are **original approximations**; n
 ## P3+ separate electric-machine audio
 
 The prototype synthesizes independent traction, generator, regenerative braking, reduction gear and gentle inverter-related harmonics. These continue without combustion when appropriate, and audio maps are different for Prius-inspired and Aura-inspired driving. No recorded samples or official PWM/gear-frequency calibration is included; device listening validation is pending. On an EV-capable hybrid, the Start button means starting the **driving simulation**, not forcing the combustion engine to start immediately.
+
+## P4 offline launch and mobile stability
+
+Production builds now emit manifest.webmanifest, sw.js and original 180/192/512px home-screen PNG icons. The worker precaches the exact static app bundle and all procedural sound modules within this GitHub Pages repository path; no account or third-party audio download is needed. The header reports readiness and pending app updates. Automatic playback after returning from background is intentionally blocked. See [PWA/QA guide](../../docs/PWA.md).
