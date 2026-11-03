@@ -34,7 +34,7 @@ export class EngineAudio {
     try {
       if (!context.audioWorklet) throw new Error("AudioWorklet unavailable");
       await context.audioWorklet.addModule(new URL("engine-worklet.js", document.baseURI).toString());
-      this.worklet = new AudioWorkletNode(context, "engine-synth-p0");
+      this.worklet = new AudioWorkletNode(context, "engine-synth-p1");
       this.worklet.connect(master);
     } catch (error) {
       console.warn("AudioWorklet could not start, using simpler procedural fallback", error);
@@ -54,7 +54,7 @@ export class EngineAudio {
     this.setActive(1);
   }
 
-  update(state: VehicleState): void {
+  update(state: VehicleState, throttleInput = state.load): void {
     if (!this.active || !this.context) return;
     const now = this.context.currentTime;
     const rpm = Number.isFinite(state.rpm) ? state.rpm : 850;
@@ -62,6 +62,9 @@ export class EngineAudio {
     if (this.worklet) {
       this.worklet.parameters.get("rpm")?.setTargetAtTime(rpm, now, 0.025);
       this.worklet.parameters.get("load")?.setTargetAtTime(load, now, 0.025);
+      this.worklet.parameters.get("throttle")?.setTargetAtTime(Math.max(0, Math.min(1, throttleInput)), now, 0.025);
+      this.worklet.parameters.get("speed")?.setTargetAtTime(Math.max(0, state.speedMps), now, 0.04);
+      this.worklet.parameters.get("combustion")?.setTargetAtTime(1, now, 0.025);
     } else {
       this.fallback?.frequency.setTargetAtTime(Math.max(20, rpm / 30), now, 0.035);
       this.filter?.frequency.setTargetAtTime(400 + 2400 * load, now, 0.05);
