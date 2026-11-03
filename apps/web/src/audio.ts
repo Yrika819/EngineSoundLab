@@ -1,5 +1,7 @@
 import type { VehicleState } from "./physics";
 
+export type EngineSoundProfile = "i3" | "i4" | "i6";
+
 /** One audio context, original procedural audio only. No media samples. */
 export class EngineAudio {
   private context: AudioContext | null = null;
@@ -8,7 +10,15 @@ export class EngineAudio {
   private filter: BiquadFilterNode | null = null;
   private master: GainNode | null = null;
   private active = false;
+  private profile: EngineSoundProfile = "i4";
   simplified = false;
+
+  /** Changes only the sound profile; the generic driving physics is shared. */
+  setProfile(profile: EngineSoundProfile): void {
+    if (!["i3", "i4", "i6"].includes(profile)) throw new RangeError("Invalid sound profile");
+    this.profile = profile;
+    this.worklet?.port.postMessage({ type: "setProfile", profileId: profile });
+  }
 
   async start(): Promise<void> {
     if (this.context) {
@@ -34,7 +44,9 @@ export class EngineAudio {
     try {
       if (!context.audioWorklet) throw new Error("AudioWorklet unavailable");
       await context.audioWorklet.addModule(new URL("engine-worklet.js", document.baseURI).toString());
-      this.worklet = new AudioWorkletNode(context, "engine-synth-p1");
+      this.worklet = new AudioWorkletNode(context, "engine-synth-p1", {
+        processorOptions: { profileId: this.profile }
+      });
       this.worklet.connect(master);
     } catch (error) {
       console.warn("AudioWorklet could not start, using simpler procedural fallback", error);
@@ -66,7 +78,8 @@ export class EngineAudio {
       this.worklet.parameters.get("speed")?.setTargetAtTime(Math.max(0, state.speedMps), now, 0.04);
       this.worklet.parameters.get("combustion")?.setTargetAtTime(1, now, 0.025);
     } else {
-      this.fallback?.frequency.setTargetAtTime(Math.max(20, rpm / 30), now, 0.035);
+      const cylinders = this.profile === "i3" ? 3 : this.profile === "i6" ? 6 : 4;
+      this.fallback?.frequency.setTargetAtTime(Math.max(20, rpm * cylinders / 120), now, 0.035);
       this.filter?.frequency.setTargetAtTime(400 + 2400 * load, now, 0.05);
     }
   }

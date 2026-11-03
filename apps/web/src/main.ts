@@ -2,6 +2,7 @@ import "./style.css";
 import { clamp, initialState, step, REDLINE_RPM } from "./physics";
 import type { DriverInput, VehicleState } from "./physics";
 import { EngineAudio } from "./audio";
+import type { EngineSoundProfile } from "./audio";
 import { pedalOpeningFromPosition } from "./pedal";
 
 function el<T extends HTMLElement>(id:string):T {
@@ -14,6 +15,12 @@ const status=el<HTMLSpanElement>("status"),hint=el<HTMLParagraphElement>("hint")
 const rpm=el<HTMLElement>("rpm"),speed=el<HTMLElement>("speed"),gear=el<HTMLElement>("gear");
 const load=el<HTMLElement>("load"),throttle=el<HTMLElement>("throttle"),gasVal=el<HTMLElement>("gas-value"),brakeVal=el<HTMLElement>("brake-value");
 const dial=el<HTMLDivElement>("dial");
+const soundProfile=el<HTMLSelectElement>("sound-profile");
+soundProfile.addEventListener("change",()=>{
+  const profile=soundProfile.value as EngineSoundProfile;
+  audio?.setProfile(profile);
+  hint.textContent="合成音を"+soundProfile.selectedOptions[0].text+"に切替。車両の走行モデルは共通です。";
+});
 let vehicle:VehicleState=initialState();
 const input:DriverInput={throttle:0,brake:0};
 let running=false,busy=false,lastFrame=0,accumulator=0;
@@ -107,6 +114,7 @@ power.addEventListener("click",async()=>{
    if(running){await halt();}
    else{
      if(!audio)audio=new EngineAudio();
+     audio.setProfile(soundProfile.value as EngineSoundProfile);
      await audio.start();running=true;gas.disabled=brake.disabled=false;
      status.textContent="合成音・走行中";status.classList.add("active");
      power.textContent="エンジンを停止 ■";

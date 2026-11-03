@@ -6,13 +6,21 @@
  * NOTE: These are musically/physically motivated acoustic approximations,
  * not measured engine pressure traces or a real vehicle calibration.
  */
-const FIRING_ANGLES = [0, 180, 360, 540]; // 4-stroke inline-4, 720-degree cycle
-const CYLINDER_VARIATION = [1.0, 0.965, 1.03, 0.985];
+/** Synthetic sound configurations, not calibrated OEM engine identities. */
+export const ENGINE_PROFILES = Object.freeze({
+  i3: { cylinders: 3, firingAngles: [0, 240, 480],
+        amplitudes: [1.0, 0.93, 1.06], pulseGain: 1.12, mechanicalOrder: 1.5 },
+  i4: { cylinders: 4, firingAngles: [0, 180, 360, 540],
+        amplitudes: [1.0, 0.965, 1.03, 0.985], pulseGain: 1.0, mechanicalOrder: 1.0 },
+  i6: { cylinders: 6, firingAngles: [0, 120, 240, 360, 480, 600],
+        amplitudes: [1.0, 0.97, 1.025, 0.99, 1.015, 0.96],
+        pulseGain: 0.78, mechanicalOrder: 3.0 }
+});
 const clamp = (value, min, max, fallback = min) =>
   Math.max(min, Math.min(max, Number.isFinite(value) ? value : fallback));
 
 export class EngineSynthCore {
-  constructor(rate = 48000, noiseSeed = 0x6d2b79f5) {
+  constructor(rate = 48000, noiseSeed = 0x6d2b79f5, profileId = "i4") {
     if (!Number.isFinite(rate) || rate < 8000 || rate > 192000)
       throw new RangeError("unsupported sample rate");
     this.rate = rate;
@@ -53,6 +61,20 @@ export class EngineSynthCore {
     this.resBSquared = bRadius * bRadius;
     this.resAGain = 1 - aRadius;
     this.resBGain = 1 - bRadius;
+    this.setProfile(profileId);
+  }
+
+  /** Changes firing geometry without resetting crankshaft phase or stored audio. */
+  setProfile(profileId) {
+    const profile = Object.hasOwn(ENGINE_PROFILES, profileId) ? ENGINE_PROFILES[profileId] : null;
+    if (!profile) throw new RangeError("Unsupported engine sound profile: " + profileId);
+    this.profileId = profileId;
+    this.profile = profile;
+    // The next ignition must be in the future; don't double-fire on a switch.
+    let index = 0;
+    while (index < profile.firingAngles.length &&
+           profile.firingAngles[index] < this.crankAngle - 1e-7) index++;
+    this.nextFiring = index;
   }
 
   random() {
@@ -85,19 +107,19 @@ export class EngineSynthCore {
     this.active = this.active * this.gateLag + active * (1 - this.gateLag);
     this.combustion = this.combustion * this.gateLag + combustion * (1 - this.gateLag);
 
-    // Four cylinders, one ignition per 180 degrees, two per revolution.
-    // At 8,000 rpm / 8,000 Hz (min supported rate), < 6 crank deg per sample.
+    // Configurable four-stroke cycle, 720 crank degrees (I3/I4/I6).
+    // Up to 8,000 RPM at 8 kHz is still under 6 degrees per sample.
     const degreesPerSample = this.rpm * 6 / this.rate;
     this.crankAngle += degreesPerSample;
     if (this.crankAngle >= 720) {
       this.crankAngle -= 720;
       this.nextFiring = 0;
     }
-    if (this.nextFiring < FIRING_ANGLES.length &&
-        this.crankAngle >= FIRING_ANGLES[this.nextFiring]) {
+    if (this.nextFiring < this.profile.firingAngles.length &&
+        this.crankAngle >= this.profile.firingAngles[this.nextFiring]) {
       // Slight per-cylinder amplitude differences keep the sequence alive.
       const strength = (0.42 + 0.38 * this.load + 0.20 * this.throttle) *
-        CYLINDER_VARIATION[this.nextFiring] * this.combustion;
+        this.profile.amplitudes[this.nextFiring] * this.profile.pulseGain * this.combustion;
       this.fastPulse += strength;
       this.slowPulse += strength;
       this.firingEvents++;
@@ -128,7 +150,7 @@ export class EngineSynthCore {
 
     // Low-strength crankshaft/mechanical order, derived from crank angle.
     const crankRadians = this.crankAngle * Math.PI / 180;
-    const mechanical = Math.sin(crankRadians) * (0.013 + 0.025 * this.load);
+    const mechanical = Math.sin(crankRadians * this.profile.mechanicalOrder) * (0.013 + 0.025 * this.load);
 
     // Road noise is retained when combustion is disabled. Shared with future EV modes.
     const roadWhite = this.random();

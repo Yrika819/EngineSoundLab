@@ -15,9 +15,18 @@ class EngineWorklet extends AudioWorkletProcessor {
       { name: "active", defaultValue: 0, minValue: 0, maxValue: 1, automationRate: "k-rate" }
     ];
   }
-  constructor() {
+  constructor(options = {}) {
     super();
-    this.synth = new EngineSynthCore(sampleRate);
+    this.synth = new EngineSynthCore(
+      sampleRate, 0x6d2b79f5, options.processorOptions?.profileId ?? "i4"
+    );
+    // The live selector changes only sound geometry; vehicle motion is unchanged.
+    if (this.port) this.port.onmessage = event => {
+      if (event.data?.type === "setProfile") {
+        try { this.synth.setProfile(event.data.profileId); }
+        catch (error) { console.warn("Invalid sound profile ignored", error); }
+      }
+    };
   }
   process(_inputs, outputs, parameters) {
     const channels = outputs[0];

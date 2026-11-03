@@ -22,3 +22,7 @@ The first Web prototype is a **generic inline-4 gasoline engine**. It is not a v
 ## Analog pedal improvements
 
 On touchscreens, the accelerator and brake now act as **position-based vertical analog pedals**. Touch a point on the pedal: the bottom is 0%, the top is 100%; dragging up or down adjusts the output in 5% steps. The live fill and percentage update together. Lifting a finger, cancellation, lost capture, tab hiding, and focus loss reset the pedal to 0%. Arrow keys / PageUp / PageDown are supported while held for keyboard accessibility. This avoids the previous instant-100%-then-drag-down behavior.
+
+## I3 / I4 / I6 synthesized sound profiles
+
+The UI now includes an **audio-only** selector for inline 3-, 4- and 6-cylinder four-stroke configurations. The engine firing events change from every 240° (I3) to 180° (I4) or 120° (I6) over a 720° crank cycle, with distinct pulse gain and mechanical-order coloration. The selector can be changed while playing without restarting the driving simulation. **Vehicle performance/gear ratios do not change yet**, so this is a sound-engine study and not a full I3/I6 vehicle simulation. No recorded samples or factory-calibrated engine profiles are included.
