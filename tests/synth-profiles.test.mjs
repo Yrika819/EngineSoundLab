@@ -49,6 +49,7 @@ test("switching live preserves crank phase and does not produce a hard impulse",
 test("invalid profile cannot corrupt an existing selection",()=>{
  const synth=new EngineSynthCore(RATE,10,"i4");
  assert.throws(()=>synth.setProfile("v12"),RangeError);
+ assert.throws(()=>synth.setProfile("__proto__"),RangeError);
  assert.equal(synth.profileId,"i4");
  assert.throws(()=>new EngineSynthCore(RATE,10,"i99"),RangeError);
 });

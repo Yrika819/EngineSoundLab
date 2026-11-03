@@ -66,7 +66,7 @@ export class EngineSynthCore {
 
   /** Changes firing geometry without resetting crankshaft phase or stored audio. */
   setProfile(profileId) {
-    const profile = ENGINE_PROFILES[profileId];
+    const profile = Object.hasOwn(ENGINE_PROFILES, profileId) ? ENGINE_PROFILES[profileId] : null;
     if (!profile) throw new RangeError("Unsupported engine sound profile: " + profileId);
     this.profileId = profileId;
     this.profile = profile;
