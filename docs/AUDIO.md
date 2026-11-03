@@ -28,3 +28,24 @@
 - Real-phone listening quality, audible latency, battery draw, dynamic range and ten-minute stability are **not yet measured on the new P1 implementation**.
 - Targets: 30+ fps gauge, aim for <=100 ms throttle-to-audible change, no audible clicks or persistent buffer dropouts. These are targets, not claimed outcomes.
 - High-order resonance tuning / exact real-car authenticity require controlled listening and proper reference material.
+
+## P3+ Electric traction, inverter & regen synthesis (prototype)
+
+The new `apps/web/public/electric-synth.js` runs at the same WebAudio sample clock as the combustion DSP but with independent phase accumulators and smoothed controls. No prerecorded or OEM assets.
+
+Electric voices:
+- Traction motor electromagnetic fundamental and harmonics tied to `mg2Rpm` and the magnitude of `motorPowerKw`.
+- Approximate reduction gear order tied to traction motor RPM.
+- Low-level inverter-related synthetic carrier/sideband, pitch-smoothed for profile changes; **carrier values are not verified switching frequencies.**
+- Additional braking/regen modulation driven by `regenPowerKw` and independent from engine combustion.
+- Generator-machine harmonics driven by `generatorPowerKw` and the separate `mg1Rpm` channel.
+
+WebAudio parameters now include `motor`, `motorRpm`, `regen`, `generator`, `generatorRpm` and `electricProfile` (0 generic / 1 Prius-inspired / 2 Aura-inspired). Numeric frequencies, pole orders, gear orders and mixture gains are all **illustrative DSP parameters**; no factory-calibrated motor topology or measured inverter PWM is claimed.
+
+Engine-off EV operation keeps the combustion layer silent but lets independent traction/regen sounds through. When the generator power is zero its voice fades to silence. Audio profile transitions smooth frequency and amplitude parameters; a master limiter remains active.
+
+Regression tests in `tests/electric-drive-audio.test.mjs` cover isolated motor, generator, regen, profile distinction, noise bounds, finite output and click-free changes. The worklet bridge contract also checks all new parameters. Browser implementation and actual smartphone listening/latency/battery tests still require real device review.
+
+Reference drivetrain topology only:
+- https://www.nissan-global.com/JP/INNOVATION/TECHNOLOGY/ARCHIVE/E_POWER/
+- https://toyota.jp/prius/

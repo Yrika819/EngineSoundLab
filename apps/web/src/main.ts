@@ -141,7 +141,7 @@ async function halt():Promise<void> {
  gas.disabled=brake.disabled=true;
  await audio?.suspend();
  status.textContent="停止中";status.classList.remove("active");
- power.textContent="エンジンを始動 ▶";
+ power.textContent="走行シミュレーション開始 ▶";
  hint.textContent="再開すると前回の走行状態から続きます。";
  draw();
 }
@@ -154,7 +154,7 @@ power.addEventListener("click",async()=>{
      audio.setProfile(soundProfile.value as EngineSoundProfile);
      await audio.start();running=true;gas.disabled=brake.disabled=false;
      status.textContent="合成音・走行中";status.classList.add("active");
-     power.textContent="エンジンを停止 ■";
+     power.textContent="シミュレーション停止 ■";
      hint.textContent=audio.simplified?"簡易合成フォールバックで再生しています。":"アクセルを長押しして加速。下に動かすと開度を減らせます。";
      lastFrame=0;requestAnimationFrame(animation);
    }

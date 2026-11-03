@@ -43,3 +43,7 @@ Choose the meter style without changing the driving or audio simulation:
 - AURA ENHANCED: Aura-only central energy flow with compact power and speed rings.
 
 The illustrations and normalized gauge scales are **original approximations**; no OEM images or proprietary UI assets are copied. Read [Gauge details](../../docs/GAUGES.md).
+
+## P3+ separate electric-machine audio
+
+The prototype synthesizes independent traction, generator, regenerative braking, reduction gear and gentle inverter-related harmonics. These continue without combustion when appropriate, and audio maps are different for Prius-inspired and Aura-inspired driving. No recorded samples or official PWM/gear-frequency calibration is included; device listening validation is pending. On an EV-capable hybrid, the Start button means starting the **driving simulation**, not forcing the combustion engine to start immediately.
