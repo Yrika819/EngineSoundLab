@@ -80,7 +80,19 @@ export class EngineAudio {
       this.worklet.parameters.get("motor")?.setTargetAtTime(
         Math.min(1,Math.abs(state.motorPowerKw)/65),now,0.03);
       this.worklet.parameters.get("motorRpm")?.setTargetAtTime(
-        Math.max(0,Math.abs(state.mg2Rpm)),now,0.035);
+        Math.max(0, Math.abs(state.mg2Rpm)), now, 0.035);
+      // Regen power is sign-consistent with negative mechanical wheel power.
+      // Dedicated electric channels remain independent of combustion RPM.
+      this.worklet.parameters.get("regen")?.setTargetAtTime(
+        Math.min(1, Math.max(0, state.regenPowerKw) / 24), now, 0.04);
+      this.worklet.parameters.get("generator")?.setTargetAtTime(
+        Math.min(1, Math.max(0, state.generatorPowerKw) / 32), now, 0.04);
+      this.worklet.parameters.get("generatorRpm")?.setTargetAtTime(
+        Math.max(0, Math.abs(state.mg1Rpm)), now, 0.04);
+      const electricProfile = state.vehicleId === "prius_60_hev" ? 1 :
+        state.vehicleId === "aura_fe13_epower" ? 2 : 0;
+      this.worklet.parameters.get("electricProfile")?.setTargetAtTime(
+        electricProfile, now, 0.075);
     } else {
       const cylinders = this.profile === "i3" ? 3 : this.profile === "i6" ? 6 : 4;
       const hz=state.combustionActive?Math.max(20,rpm*cylinders/120):
