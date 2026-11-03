@@ -22,7 +22,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Install development dependencies
-        run: npm install --ignore-scripts --no-audit --no-fund
-      - name: Typecheck and contract tests
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+      - name: Typecheck, tests and production build
         run: npm run check
