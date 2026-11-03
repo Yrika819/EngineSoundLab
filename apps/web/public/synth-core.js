@@ -7,6 +7,7 @@
  * not measured engine pressure traces or a real vehicle calibration.
  */
 const FIRING_ANGLES = [0, 180, 360, 540]; // 4-stroke inline-4, 720-degree cycle
+const CYLINDER_VARIATION = [1.0, 0.965, 1.03, 0.985];
 const clamp = (value, min, max, fallback = min) =>
   Math.max(min, Math.min(max, Number.isFinite(value) ? value : fallback));
 
@@ -95,9 +96,8 @@ export class EngineSynthCore {
     if (this.nextFiring < FIRING_ANGLES.length &&
         this.crankAngle >= FIRING_ANGLES[this.nextFiring]) {
       // Slight per-cylinder amplitude differences keep the sequence alive.
-      const amplitudes = [1.0, 0.965, 1.03, 0.985];
       const strength = (0.42 + 0.38 * this.load + 0.20 * this.throttle) *
-        amplitudes[this.nextFiring] * this.combustion;
+        CYLINDER_VARIATION[this.nextFiring] * this.combustion;
       this.fastPulse += strength;
       this.slowPulse += strength;
       this.firingEvents++;
