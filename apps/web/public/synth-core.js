@@ -30,7 +30,7 @@ export class EngineSynthCore {
     this.throttle = 0;
     this.speed = 0;
     this.active = 0;
-    this.combustion = 1;
+    this.combustion = 0; // Default silence until engine combustion is explicitly enabled.
     this.crankAngle = 0;
     this.nextFiring = 0;
     this.firingEvents = 0;
