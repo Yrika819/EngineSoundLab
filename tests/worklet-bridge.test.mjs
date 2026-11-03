@@ -6,7 +6,9 @@ import assert from "node:assert/strict";
 let registeredName = "";
 let Worklet = null;
 globalThis.sampleRate = 48000;
-globalThis.AudioWorkletProcessor = class {};
+globalThis.AudioWorkletProcessor = class {
+  constructor() { this.port = { onmessage: null }; }
+};
 globalThis.registerProcessor = (name, constructor) => {
   registeredName = name;
   Worklet = constructor;
@@ -34,4 +36,15 @@ test("worklet registers and consumes UI parameter channels", () => {
   assert.ok(output[0][0].some(value => value !== 0), "silent worklet output");
   assert.ok(output[0][0].every(Number.isFinite), "non-finite audio");
   assert.deepEqual(output[0][0], output[0][1], "stereo channels not consistent");
+});
+
+test("worklet can change I3/I4/I6 geometry without resetting the audio node", () => {
+  const node = new Worklet({ processorOptions: { profileId: "i3" } });
+  assert.equal(node.synth.profileId, "i3");
+  assert.equal(node.synth.profile.cylinders, 3);
+  node.port.onmessage({ data: { type: "setProfile", profileId: "i6" } });
+  assert.equal(node.synth.profileId, "i6");
+  assert.equal(node.synth.profile.cylinders, 6);
+  node.port.onmessage({ data: { type: "setProfile", profileId: "not-supported" } });
+  assert.equal(node.synth.profileId, "i6");
 });

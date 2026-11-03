@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
   <meta name="theme-color" content="#0a1322"/>
   <meta name="description" content="録音なしのリアルタイム合成エンジン音をスマホで操作するWebデモ"/>
-  <title>EngineSoundLab — P0 Synth Prototype</title>
+  <title>EngineSoundLab — P1 Sound Profiles</title>
 </head>
 <body>
   <main class="app">
@@ -15,11 +15,19 @@
     </header>
     <section class="intro">
       <h2>アクセルで、音をつくる。</h2>
-      <p>録音なしのリアルタイム合成。4気筒の点火、排気共鳴、吸気・負荷変化を表現する試作版です。実車の正確な再現ではありません。</p>
+      <p>録音なしのリアルタイム合成。3・4・6気筒の点火を切替できる合成音の試作版です。実車の正確な再現ではありません。</p>
     </section>
     <section class="vehicle">
-      <div><small>VEHICLE PROFILE</small><strong>GENERIC I4 · AUTO</strong><span>汎用4気筒／試作モデル</span></div>
-      <div><small>AUDIO ENGINE</small><strong>SYNTH • P1</strong><span>録音サンプル不使用</span></div>
+      <div><small>VEHICLE SIMULATION</small><strong>GENERIC AUTO</strong><span>走行物理は共通の試作モデル</span></div>
+      <div class="sound-profile-card">
+        <label for="sound-profile">SYNTH · SOUND PROFILE</label>
+        <select id="sound-profile" aria-label="エンジン合成音の気筒数">
+          <option value="i3">直列3気筒 I3</option>
+          <option value="i4" selected>直列4気筒 I4</option>
+          <option value="i6">直列6気筒 I6</option>
+        </select>
+        <span>録音不要・音響モデルのみ切替</span>
+      </div>
     </section>
     <section class="instrument" aria-label="メーター">
       <div class="dial" id="dial">

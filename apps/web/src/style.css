@@ -26,3 +26,9 @@ footer{color:#738da8;font-size:10px;display:flex;justify-content:space-between;f
 .pedal .pedal-current{position:relative;z-index:1;font-size:29px;letter-spacing:-1px;pointer-events:none;text-shadow:0 1px 3px #0006}
 .pedal .pedal-tip{position:relative;z-index:1;font-size:10px;opacity:.8;pointer-events:none}
 @media(max-height:680px){.pedal{min-height:125px}.controls .pedal-guide{font-size:10px}.pedal .pedal-tip{display:none}}
+
+/* Sound-only I3/I4/I6 selector: no manufacturer performance claims. */
+.vehicle .sound-profile-card{min-width:0}
+.vehicle label{font-size:10px;color:#8eaccd;letter-spacing:.5px;font-weight:700}
+.vehicle select{display:block;min-height:38px;width:100%;background:#182d43;border:1px solid #53739b;border-radius:9px;color:#f4f9ff;padding:6px 8px;font:inherit;font-size:12px;font-weight:650}
+.vehicle select:focus-visible{outline:2px solid #72d7ff;outline-offset:2px}
