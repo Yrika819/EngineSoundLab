@@ -8,11 +8,16 @@
     "skipLibCheck": true,
     "lib": [
       "ES2022",
-      "DOM"
+      "DOM",
+      "DOM.Iterable"
+    ],
+    "types": [
+      "vite/client"
     ],
     "forceConsistentCasingInFileNames": true
   },
   "include": [
-    "packages/**/*.ts"
+    "packages/**/*.ts",
+    "apps/web/**/*.ts"
   ]
 }
