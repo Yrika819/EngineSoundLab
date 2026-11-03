@@ -25,7 +25,7 @@ test("Aura Classic power + speed must share top row while flow spans beneath", (
 });
 
 test("enhanced layout remains independently three-column", () => {
-  assert.match(css, /\.gauge-aura\.enhanced \.aura-layout\s*\{grid-template-columns:.*?3/);
+  assert.match(css, /\.gauge-aura\.enhanced \.aura-layout\s*\{grid-template-columns:\s*minmax\(0,\.7fr\) minmax\(0,1\.6fr\) minmax\(0,\.7fr\)/);
   assert.match(css, /\.gauge-aura\.enhanced \.aura-velocity\s*\{grid-column:3;grid-row:1/);
 });
 
