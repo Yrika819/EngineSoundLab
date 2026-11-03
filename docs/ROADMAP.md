@@ -1,12 +1,15 @@
-# Roadmap
+# Roadmap — synthesis-first (v0.6)
 
-- **M0 — Public project foundation**: README, architecture, powertrain specification, interface types, CI, initial issues. No functioning simulator claimed.
-- **M1 — Simulation contracts**: fixed timestep vehicle integrator, energy accounting, immutable telemetry, tests.
-- **M2 — Hybrid vehicle controllers**: Prius 60-series THS, Aura FE13 e-POWER; test state transitions and physics consistency.
-- **M3 — Procedural audio**: combustion, intake/exhaust, motor and rolling audio; mobile-safe AudioWorklet.
-- **M4 — Gauge themes and mobile UI**: Prius, Aura, SPORT, ENGINEERING; portrait/landscape input.
-- **M5 — Sample-based hybrid audio**: authorized samples, load/RPM blending, fallback, sound comparison.
-- **M6 — Mobile release**: PWA, offline behavior, Android/iOS QA, reproducibility and documentation.
-- **Later**: neutral/free-rev, more vehicles (IS300h, Skyline V37, GR Supra, Civic e:HEV), advanced acoustics.
+A working procedural **accelerating car sound** on a phone is the next deliverable. Recorded-source hybrid mode is **not** a blocker and free revving is postponed.
 
-Avoid conflating planned features with working features.
+1. **P0 Audible prototype**: working mobile page, throttle, brake, generic vehicle physics and continuously generated acceleration sound; CI and browser smoke.
+2. **P1 High-quality synthesis**: firing geometry, load-sensitive induction/exhaust, motor and road sound, audio diagnostics.
+3. **P2 Prius/Aura controllers**: independent THS/e-POWER behavior, SOC, electrical energy balance, start/stop states.
+4. **P3 Manufacturer-inspired gauges**: Prius, Aura, SPORT, ENGINEERING, portrait/landscape.
+5. **P4 Release hardening**: PWA, offline baseline, iOS/Android QA, public Web deployment.
+6. **P5 Optional hybrid samples**: only with licensed recordings and only if they improve realism; synthesis remains default.
+7. **P6 Later**: more vehicles, free revving, advanced customizations.
+
+**Execution policy**: implementation delegated for routine decisions; work through small PRs, require green CI before merge, record measurable results. No autonomous activity between explicit tool-equipped sessions.
+
+Full details: [Implementation plan](IMPLEMENTATION_PLAN.md).
