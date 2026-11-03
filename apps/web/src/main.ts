@@ -5,6 +5,7 @@ import { advanceDrive, makeDriveState, type DriveState, type VehicleId } from ".
 import { EngineAudio } from "./audio";
 import type { EngineSoundProfile } from "./audio";
 import { pedalOpeningFromPosition } from "./pedal";
+import { createGaugePanel } from "./gauge-ui";
 
 function el<T extends HTMLElement>(id:string):T {
  const node=document.getElementById(id);
@@ -24,6 +25,7 @@ const enginePhaseText=el<HTMLElement>("engine-state");
 const motorPower=el<HTMLElement>("motor-power");
 const generatorPower=el<HTMLElement>("generator-power");
 const powertrainNotice=el<HTMLElement>("powertrain-notice");
+const gaugePanel=createGaugePanel(dial,energyPanel);
 soundProfile.addEventListener("change",()=>{
   const profile=soundProfile.value as EngineSoundProfile;
   audio?.setProfile(profile);
@@ -92,6 +94,7 @@ vehicleProfile.addEventListener("change",()=>{
  if(!["generic_i4","prius_60_hev","aura_fe13_epower"].includes(id))return;
  clearPedals();
  vehicle=makeDriveState(id);
+ gaugePanel.onVehicleChange(id);
  accumulator=0;lastFrame=0;
  const profile=id==="aura_fe13_epower"?"i3":"i4";
  soundProfile.value=profile;
@@ -123,6 +126,7 @@ function draw():void {
   generatorPower.textContent=vehicle.generatorPowerKw.toFixed(1)+" kW";
  }
  dial.style.setProperty("--rpm-angle",(vehicle.rpm/REDLINE_RPM*300).toFixed(1)+"deg");
+ gaugePanel.render(vehicle);
 }
 function animation(timestamp:number):void {
  if(!running)return;

@@ -15,7 +15,7 @@ The first Web prototype is a **generic inline-4 gasoline engine**. It is not a v
 - Hold brake to decelerate; speed and RPM appear in a generic meter.
 - Leaving the tab clears inputs and suspends audio. A user gesture is required to resume.
 - Where AudioWorklet is unsupported, a simpler oscillator sound path is used and labeled accordingly.
-- PWA/offline caching and dedicated THS/e-POWER controllers are **not implemented yet**.
+- PWA/offline caching is **not implemented yet**. Approximate THS and e-POWER controllers exist, but they are **not OEM validated**.
 
 `npm run build` outputs static files to `dist/web`, suitable for future GitHub Pages deployment.
 
@@ -32,3 +32,14 @@ The UI now includes an **audio-only** selector for inline 3-, 4- and 6-cylinder 
 The page can select a generic gasoline drivetrain, a conceptual Toyota Prius 60-series power-split HEV, or a conceptual Nissan Aura FE13 series HEV. Displayed hybrid data includes SOC, engine phase, drive motor and generator power; motor whine is synthesized separately from combustion. Manufacturer ECU thresholds, motor/battery ratings and power-split tooth counts are **not calibrated**, and numeric values are placeholders. Prius sounds default to I4 and Aura to I3; the user can override sound cylinder count independently of the simulated drivetrain.
 
 Tests cover e-POWER engine/wheel disconnection, Prius planetary kinematics, energy accounting, start/stop state, regeneration and EV-only acoustic output.
+
+## P3 manufacturer-inspired original gauge skins
+
+Choose the meter style without changing the driving or audio simulation:
+
+- AUTO: Prius horizontal speed/CHARGE-ECO-POWER, Aura Classic twin power/speed dials, generic SPORT.
+- SPORT: original RPM/speed dial.
+- ENGINEERING: shared physical/electric telemetry from DriveState, including SOC, motor/generator/battery power.
+- AURA ENHANCED: Aura-only central energy flow with compact power and speed rings.
+
+The illustrations and normalized gauge scales are **original approximations**; no OEM images or proprietary UI assets are copied. Read [Gauge details](../../docs/GAUGES.md).

@@ -2,7 +2,7 @@
 
 スマートフォン向けの**加速音・パワートレーン・メーターシミュレーター**。Android Chrome / iPhone Safari を主な対象とする、開発初期のオープンソースプロジェクトです。
 
-> **状態: **公開P1試作版（3・4・6気筒の合成音を切替可能）**。実車相当の精度や各メーカーの音質を再現済みという意味ではありません。**
+> **状態：公開プロトタイプ P3（合成音・近似ハイブリッド・車種別メーター）。実車の音響や制御を正確に再現する完成品ではありません。**
 
 ## 目指す体験
 
@@ -27,6 +27,7 @@
 - [Web版を開く](https://yrika819.github.io/EngineSoundLab/)（GitHub Pages）
 - スマホでアクセル・ブレーキを操作、汎用AT、プリウスTHS近似、オーラe-POWER近似のRPM・車速を表示
 - **3・4・6気筒の点火間隔・排気共鳴・吸気・走行音を合成**。気筒数は再生中も切替可能（走行物理は共通）。音源サンプル不要、録音音源なし
+- **P3：プリウス風CHARGE/ECO/POWER、オーラ風クラシック/エンハンス、SPORT、ENGINEERINGのメーターを選択可能。**
 - [Node上のDSPテスト](tests/synth-core.test.mjs)と[Worklet連携テスト](tests/worklet-bridge.test.mjs)をCIで実行
 
 ## P2の車両制御（試作）
@@ -44,6 +45,7 @@
 - [アーキテクチャ](docs/ARCHITECTURE.md)
 - [車両制御設計](docs/POWERTRAINS.md)
 - [音響仕様](docs/AUDIO.md)
+- [メーター表示設計](docs/GAUGES.md)
 - [品質・受け入れ基準](docs/QUALITY.md)
 
 ## 技術方針
