@@ -35,12 +35,21 @@
     <section class="controls">
       <button id="power" class="power" type="button">エンジンを始動 ▶</button>
       <p id="hint">音量を控えめにしてから開始してください。音声再生にはタップが必要です。</p>
+      <p class="pedal-guide">ペダルの<strong>押す高さ</strong>で開度を指定。上が100%・下が0%、指を離すと戻ります。</p>
       <div class="pedals">
-        <button id="brake" class="pedal brake" type="button" disabled aria-label="ブレーキ 長押し">
-          <span>BRAKE</span><strong id="brake-value">0%</strong><small>長押し</small>
+        <button id="brake" class="pedal brake" type="button" disabled role="slider" aria-label="ブレーキ開度" aria-orientation="vertical" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-valuetext="0パーセント">
+          <span class="pedal-fill" aria-hidden="true"></span>
+          <span class="pedal-thumb" aria-hidden="true"></span>
+          <span class="pedal-scale" aria-hidden="true"><span>100</span><span>75</span><span>50</span><span>25</span><span>0</span></span>
+          <span class="pedal-title">BRAKE</span><strong id="brake-value" class="pedal-current">0%</strong>
+          <span class="pedal-tip">位置で指定</span>
         </button>
-        <button id="accelerator" class="pedal gas" type="button" disabled aria-label="アクセル 長押し・下へドラッグで開度調整">
-          <span>ACCELERATOR</span><strong id="gas-value">0%</strong><small>長押し／上下で調整</small>
+        <button id="accelerator" class="pedal gas" type="button" disabled role="slider" aria-label="アクセル開度" aria-orientation="vertical" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-valuetext="0パーセント">
+          <span class="pedal-fill" aria-hidden="true"></span>
+          <span class="pedal-thumb" aria-hidden="true"></span>
+          <span class="pedal-scale" aria-hidden="true"><span>100</span><span>75</span><span>50</span><span>25</span><span>0</span></span>
+          <span class="pedal-title">ACCELERATOR</span><strong id="gas-value" class="pedal-current">0%</strong>
+          <span class="pedal-tip">位置で指定</span>
         </button>
       </div>
     </section>
