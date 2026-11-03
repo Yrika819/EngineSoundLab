@@ -6,6 +6,7 @@ import { EngineAudio } from "./audio";
 import type { EngineSoundProfile } from "./audio";
 import { pedalOpeningFromPosition } from "./pedal";
 import { createGaugePanel } from "./gauge-ui";
+import { registerOfflineApp } from "./pwa";
 
 function el<T extends HTMLElement>(id:string):T {
  const node=document.getElementById(id);
@@ -25,6 +26,7 @@ const enginePhaseText=el<HTMLElement>("engine-state");
 const motorPower=el<HTMLElement>("motor-power");
 const generatorPower=el<HTMLElement>("generator-power");
 const powertrainNotice=el<HTMLElement>("powertrain-notice");
+const offlineStatus=el<HTMLElement>("offline-status");
 const gaugePanel=createGaugePanel(dial,energyPanel);
 soundProfile.addEventListener("change",()=>{
   const profile=soundProfile.value as EngineSoundProfile;
@@ -33,7 +35,8 @@ soundProfile.addEventListener("change",()=>{
 });
 let vehicle:DriveState=makeDriveState("generic_i4");
 const input:DriverInput={throttle:0,brake:0};
-let running=false,busy=false,lastFrame=0,accumulator=0;
+let running=false,busy=false,lastFrame=0,accumulator=0,lastPaint=0;
+let animationHandle: number | null = null;
 let audio:EngineAudio|null=null;
 const cancelPedals:Array<()=>void>=[];
 
@@ -134,16 +137,21 @@ function animation(timestamp:number):void {
  accumulator+=Math.min(0.05,Math.max(0,(timestamp-lastFrame)/1000));lastFrame=timestamp;
  let count=0;
  while(accumulator>=0.01 && count++<5){vehicle=advanceDrive(vehicle,input,0.01);accumulator-=0.01;}
- audio?.update(vehicle, input.throttle);draw();requestAnimationFrame(animation);
+ audio?.update(vehicle, input.throttle);
+ // Meter DOM updates run at ~30 FPS; physics/audio remain responsive at 100/60 Hz.
+ if(timestamp-lastPaint>=32){draw();lastPaint=timestamp;}
+ animationHandle=requestAnimationFrame(animation);
 }
 async function halt():Promise<void> {
- running=false;clearPedals();lastFrame=0;accumulator=0;
+ running=false;clearPedals();lastFrame=0;accumulator=0;lastPaint=0;
+ if(animationHandle!==null){cancelAnimationFrame(animationHandle);animationHandle=null;}
  gas.disabled=brake.disabled=true;
- await audio?.suspend();
+ // Update UI synchronously before awaiting the browser's audio suspension.
  status.textContent="停止中";status.classList.remove("active");
  power.textContent="走行シミュレーション開始 ▶";
  hint.textContent="再開すると前回の走行状態から続きます。";
  draw();
+ await audio?.suspend();
 }
 power.addEventListener("click",async()=>{
  if(busy)return;busy=true;power.disabled=true;
@@ -152,11 +160,20 @@ power.addEventListener("click",async()=>{
    else{
      if(!audio)audio=new EngineAudio();
      audio.setProfile(soundProfile.value as EngineSoundProfile);
-     await audio.start();running=true;gas.disabled=brake.disabled=false;
+     await audio.start();
+     // A slow AudioWorklet load must not start playback after app backgrounding.
+     if(document.hidden){
+       await audio.suspend();
+       clearPedals();
+       hint.textContent="アプリが非表示になったため開始を中止しました。";
+       return;
+     }
+     running=true;gas.disabled=brake.disabled=false;
      status.textContent="合成音・走行中";status.classList.add("active");
      power.textContent="シミュレーション停止 ■";
      hint.textContent=audio.simplified?"簡易合成フォールバックで再生しています。":"アクセルを長押しして加速。下に動かすと開度を減らせます。";
-     lastFrame=0;requestAnimationFrame(animation);
+     lastFrame=0;lastPaint=0;
+     animationHandle=requestAnimationFrame(animation);
    }
  } catch(error){
    console.error(error);running=false;clearPedals();gas.disabled=brake.disabled=true;
@@ -165,8 +182,19 @@ power.addEventListener("click",async()=>{
    await audio?.dispose().catch(console.error);audio=null;
  } finally {busy=false;power.disabled=false;}
 });
+function pauseForInterruption(): void {
+ clearPedals();
+ if(running) void halt().catch(error => console.warn("Unable to suspend audio",error));
+}
 document.addEventListener("visibilitychange",()=>{
- if(document.hidden && running && !busy)void halt();
+ if(document.hidden) pauseForInterruption();
 });
-window.addEventListener("pagehide",()=>{clearPedals();running=false;void audio?.dispose();});
+// Clearing controls is immediate even if the browser doesn't fire pointercancel.
+window.addEventListener("blur",clearPedals);
+window.addEventListener("resize",clearPedals);
+window.addEventListener("pagehide",pauseForInterruption);
+window.addEventListener("pageshow",event=>{
+ if(event.persisted)pauseForInterruption(); // bfcache restore never resumes throttle/audio
+});
 draw();
+void registerOfflineApp(message=>{offlineStatus.textContent=message;});

@@ -7,6 +7,9 @@ const webRoot = fileURLToPath(new URL(".", import.meta.url));
 const publicFiles = [
   "manifest.webmanifest",
   "icon.svg",
+  "apple-touch-icon.png",
+  "icon-192.png",
+  "icon-512.png",
   "engine-worklet.js",
   "synth-core.js",
   "electric-synth.js"
