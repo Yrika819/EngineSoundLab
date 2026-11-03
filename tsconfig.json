@@ -10,9 +10,13 @@
       "ES2022",
       "DOM"
     ],
+    "types": [
+      "vite/client"
+    ],
     "forceConsistentCasingInFileNames": true
   },
   "include": [
-    "packages/**/*.ts"
+    "packages/**/*.ts",
+    "apps/web/**/*.ts"
   ]
 }
