@@ -44,3 +44,68 @@ footer{color:#738da8;font-size:10px;display:flex;justify-content:space-between;f
 .energy-panel small{font-size:8px;color:#9bb8d6;letter-spacing:.3px}
 .energy-panel strong{font-size:12px;color:#c9f7e4;font-variant-numeric:tabular-nums}
 @media(max-width:360px){.energy-panel{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+
+/* P3: Original manufacturer-inspired instrument skins. No OEM artwork. */
+[hidden]{display:none!important}
+.meter-toolbar{width:100%;display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:9px}
+.meter-toolbar label{color:#91accb;font-size:10px;font-weight:700;letter-spacing:.8px}
+.meter-toolbar select{max-width:68%;min-height:37px;background:#182b42;color:#f2f8ff;border:1px solid #4a698c;border-radius:9px;padding:5px 8px;font-size:12px}
+.meter-toolbar select:focus-visible{outline:2px solid #72d7ff;outline-offset:2px}
+.gauge-skins{width:100%;display:flex;justify-content:center}
+.gauge-skin{width:100%;max-width:600px;min-height:200px;overflow:hidden}
+.skin-top,.skin-bottom{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.skin-top{font-size:10px;letter-spacing:1px;font-weight:700}
+.skin-top strong{font-size:10px}
+.gauge-prius{padding:15px 15px 11px;border:1px solid #315f6b;border-radius:18px;background:linear-gradient(135deg,#102f36,#101a28 70%);color:#e4fdf7}
+.gauge-prius .skin-top{color:#8aefcc}
+.prius-speed{display:flex;align-items:baseline;justify-content:center;gap:13px;padding:4px 0}
+.prius-speed>span{font-size:21px;color:#88e5d3;font-weight:750}
+.prius-speed>strong{font-size:clamp(55px,14vw,92px);letter-spacing:-3px;font-variant-numeric:tabular-nums}
+.prius-speed>small{font-size:12px;color:#b4d4d7}
+.meter-label{font-size:10px;color:#8dbdc2;letter-spacing:1px;margin:5px 0 7px}
+.meter-track{height:15px;border-radius:8px;background:#263a50;display:grid;grid-template-columns:1fr 1fr;gap:2px;overflow:hidden}
+.meter-track>div{min-width:0;display:flex;align-items:stretch;background:#17283c}
+.meter-track .track-left{justify-content:flex-end}
+.meter-track span{display:block;width:0%;height:100%;transition:width 70ms linear}
+.meter-track .track-left span{background:linear-gradient(90deg,#3b83d7,#8dccf5)}
+.meter-track .track-right span{background:linear-gradient(90deg,#59d1b2,#c3d861)}
+.meter-key{display:flex;justify-content:space-between;margin:6px 0 8px;gap:6px;color:#9dc9d0;font-size:10px}
+.skin-bottom{border-top:1px solid #2b4d53;padding-top:9px;font-size:11px;color:#b0e0d5}
+.skin-bottom strong{color:#8befb7}
+.gauge-aura{padding:11px 11px 13px;border:1px solid #464d78;border-radius:18px;background:linear-gradient(150deg,#1e2338,#101726 70%);color:#eff1ff}
+.gauge-aura .skin-top{color:#c3b4f9;margin:0 3px 9px}
+.gauge-aura .skin-top strong{color:#90f0d5}
+.aura-layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:9px}
+.aura-analog{aspect-ratio:1;border-radius:50%;border:1px solid #4b5e85;max-width:235px;width:100%;margin:0 auto;padding:10px 6px;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:5px;background:radial-gradient(circle,#273758,#111828 73%)}
+.aura-analog small{font-size:clamp(8px,2vw,10px);color:#c1c9e6;text-align:center}
+.aura-analog>strong{font-size:clamp(31px,8vw,60px);line-height:1.1;font-variant-numeric:tabular-nums;letter-spacing:-2px}
+.aura-analog>span{font-size:11px;color:#b9c7e5}
+.aura-analog .meter-track{height:10px;width:90%}
+.aura-analog .aura-label{font-size:8px;letter-spacing:.4px}
+.aura-flow{grid-column:1/-1;border:1px solid #344561;border-radius:11px;padding:9px;background:#13253b;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:6px;text-align:center;min-width:0}
+.aura-flow small{font-size:9px;color:#9aa9dc;letter-spacing:1px}
+.aura-flow strong{font-size:12px;font-weight:600;line-height:1.4;overflow-wrap:anywhere}
+.aura-flow span{font-size:10px;color:#99eed8}
+.gauge-aura.enhanced .aura-layout{grid-template-columns:minmax(0,.7fr) minmax(0,1.6fr) minmax(0,.7fr);gap:6px;align-items:center}
+.gauge-aura.enhanced .aura-flow{grid-column:2;grid-row:1;min-height:160px}
+.gauge-aura.enhanced .aura-power{grid-column:1;grid-row:1;padding:5px 1px}
+.gauge-aura.enhanced .aura-velocity{grid-column:3;grid-row:1;padding:5px 1px}
+.gauge-aura.enhanced .aura-analog>strong{font-size:clamp(22px,5vw,42px)}
+.gauge-aura.enhanced .aura-analog small{font-size:8px}
+.gauge-aura.enhanced .aura-label{display:none}
+.gauge-technical{padding:14px;border:1px solid #30506f;border-radius:18px;background:#102034}
+.gauge-technical .skin-top{color:#a6ccfa;margin-bottom:10px}
+.tech-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+.tech-grid>div{display:flex;flex-direction:column;gap:5px;min-width:0;border:1px solid #2e516d;border-radius:10px;padding:9px;background:#192e48}
+.tech-grid span{color:#a7bfdb;font-size:9px;letter-spacing:.5px}
+.tech-grid strong{color:#f1f7fe;font-size:16px;font-variant-numeric:tabular-nums}
+.tech-flow{color:#a1e3d4;font-size:11px;text-align:center;line-height:1.4;margin:10px 0 0}
+@media(max-width:400px){
+ .gauge-prius{padding:12px}
+ .gauge-aura{padding:10px 7px}
+ .aura-analog{padding:6px 4px}
+ .aura-flow strong{font-size:11px}
+ .gauge-aura.enhanced .aura-flow{min-height:140px}
+ .meter-toolbar select{font-size:11px}
+}
