@@ -59,6 +59,7 @@
 - [アーキテクチャ](docs/ARCHITECTURE.md)
 - [車両制御設計](docs/POWERTRAINS.md)
 - [音響仕様](docs/AUDIO.md)
+- **[P5 事前音響研究：プリウス2.0 HEVとオーラFE13（出典・比較・制約）](docs/P5_PRIUS_AURA_SOUND_RESEARCH.md)**
 - [メーター表示設計](docs/GAUGES.md)
 - [品質・受け入れ基準](docs/QUALITY.md)
 
