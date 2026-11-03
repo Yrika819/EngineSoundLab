@@ -2,6 +2,7 @@ import "./style.css";
 import { clamp, initialState, step, REDLINE_RPM } from "./physics";
 import type { DriverInput, VehicleState } from "./physics";
 import { EngineAudio } from "./audio";
+import { pedalOpeningFromPosition } from "./pedal";
 
 function el<T extends HTMLElement>(id:string):T {
  const node=document.getElementById(id);
@@ -20,20 +21,55 @@ let audio:EngineAudio|null=null;
 const cancelPedals:Array<()=>void>=[];
 
 function bindPedal(button:HTMLButtonElement,key:keyof DriverInput):void {
- let pointer:number|null=null,startY=0;
- const clear=()=>{pointer=null;input[key]=0;button.classList.remove("pressed");};
+ let pointer:number|null=null;
+ const sync=()=>{
+   const percent=Math.round(input[key]*100);
+   button.style.setProperty("--pedal-level",percent+"%");
+   button.setAttribute("aria-valuenow",String(percent));
+   button.setAttribute("aria-valuetext",percent+"パーセント");
+ };
+ const clear=()=>{pointer=null;input[key]=0;button.classList.remove("pressed");sync();};
+ const setFromY=(y:number)=>{
+   const rect=button.getBoundingClientRect();
+   input[key]=pedalOpeningFromPosition(y,rect.top,rect.height);
+   sync();
+ };
  cancelPedals.push(clear);
  button.addEventListener("pointerdown",event=>{
    if(!running||pointer!==null)return;
-   pointer=event.pointerId;startY=event.clientY;input[key]=1;
-   button.classList.add("pressed");button.setPointerCapture(event.pointerId);event.preventDefault();
+   pointer=event.pointerId;
+   button.setPointerCapture(event.pointerId);
+   button.classList.add("pressed");
+   setFromY(event.clientY);
+   event.preventDefault();
  });
  button.addEventListener("pointermove",event=>{
-   if(pointer===event.pointerId)input[key]=clamp(1-(event.clientY-startY)/135,0,1);
+   if(pointer===event.pointerId)setFromY(event.clientY);
  });
  for(const type of ["pointerup","pointercancel","lostpointercapture"]){
-   button.addEventListener(type,event=>{if(pointer===(event as PointerEvent).pointerId)clear();});
+   button.addEventListener(type,event=>{
+     if(pointer===(event as PointerEvent).pointerId)clear();
+   });
  }
+ button.addEventListener("keydown",event=>{
+   if(!running)return;
+   const keyname=event.key;
+   if(!["ArrowUp","ArrowRight","ArrowDown","ArrowLeft","Home","End","PageUp","PageDown"].includes(keyname))return;
+   event.preventDefault();
+   if(keyname==="Home")input[key]=0;
+   else if(keyname==="End")input[key]=1;
+   else {
+     const delta=keyname==="PageUp"?0.25:keyname==="PageDown"?-0.25:
+       keyname==="ArrowUp"||keyname==="ArrowRight"?0.05:-0.05;
+     input[key]=clamp(Math.round((input[key]+delta)*20)/20,0,1);
+   }
+   button.classList.add("pressed");sync();
+ });
+ button.addEventListener("keyup",event=>{
+   if(["ArrowUp","ArrowRight","ArrowDown","ArrowLeft","Home","End","PageUp","PageDown"].includes(event.key))clear();
+ });
+ button.addEventListener("blur",clear);
+ sync();
 }
 bindPedal(gas,"throttle");bindPedal(brake,"brake");
 const clearPedals=()=>cancelPedals.forEach(clear=>clear());

@@ -18,3 +18,7 @@ The first Web prototype is a **generic inline-4 gasoline engine**. It is not a v
 - PWA/offline caching and dedicated THS/e-POWER controllers are **not implemented yet**.
 
 `npm run build` outputs static files to `dist/web`, suitable for future GitHub Pages deployment.
+
+## Analog pedal improvements
+
+On touchscreens, the accelerator and brake now act as **position-based vertical analog pedals**. Touch a point on the pedal: the bottom is 0%, the top is 100%; dragging up or down adjusts the output in 5% steps. The live fill and percentage update together. Lifting a finger, cancellation, lost capture, tab hiding, and focus loss reset the pedal to 0%. Arrow keys / PageUp / PageDown are supported while held for keyboard accessibility. This avoids the previous instant-100%-then-drag-down behavior.
