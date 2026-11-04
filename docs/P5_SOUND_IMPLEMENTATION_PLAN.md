@@ -137,3 +137,9 @@
 - Adds distinct starter/generator-assisted mechanical rotation audio for unfuelled engine operation; combustion pressure continues to follow P5-A fuelled gate exclusively.
 - Adds offline regression at 44.1/48/96kHz; PWA preloads the new module. **These tests prove algorithmic stability, not verified OEM sound similarity.**
 - P5-C electric sources, P5-D cabin masking and P5-E listening/real-car comparison remain outstanding.
+
+## P5-B.1 additive refinement and conflict resolution
+
+PR #24 introduced the dedicated Prius/Aura combustion banks and nonfuelled engine motoring audio. An independently produced alternative P5-B PR (#25) was in progress when #24 merged and became conflicting. The alternative engine must **not** be merged over #24; it is superseded. Only complementary improvements are carried forward here: estimated cabin mid-band EQ, improved intake/throttle transient, and fuel-cut/no-false-ignition behavior. Vehicle source architecture, original P5-B tests, battery/drive models, PWA and electric synthesis remain intact.
+
+These changes improve the model's qualitative plausibility; they are not a substitute for P5-E listening and spectral comparison against matched real-car recordings.
