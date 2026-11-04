@@ -12,7 +12,8 @@ const publicFiles = [
   "icon-512.png",
   "engine-worklet.js",
   "synth-core.js",
-  "electric-synth.js"
+  "electric-synth.js",
+  "ice-acoustics.js"
 ];
 
 /**

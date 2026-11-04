@@ -86,6 +86,8 @@ export class EngineAudio {
       set("generator", telemetry.generatorAmplitude, 0.04);
       set("generatorRpm", telemetry.generatorShaftRpm, 0.04);
       set("electricProfile", telemetry.electricProfile, 0.075);
+      set("iceProfile", telemetry.iceProfile, 0.090);
+      set("engineMotoring", telemetry.engineMotoringAmplitude, 0.028);
     } else {
       const cylinders = this.profile === "i3" ? 3 : this.profile === "i6" ? 6 : 4;
       const hz = telemetry.combustionGate
