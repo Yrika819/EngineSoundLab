@@ -5,33 +5,57 @@ import { readFileSync } from "node:fs";
 const css = readFileSync(new URL("../apps/web/src/style.css", import.meta.url), "utf8");
 const markup = readFileSync(new URL("../apps/web/src/gauge-ui.ts", import.meta.url), "utf8");
 
-function gridPlacement(selector) {
+function ruleFor(selector) {
   const escaped = selector.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  const rule = new RegExp(escaped + "\\s*\\{([^}]*)\\}", "m").exec(css);
-  assert.ok(rule, "missing CSS rule: " + selector);
-  const col = /grid-column:\s*([^;]+);/.exec(rule[1]);
-  const row = /grid-row:\s*([^;]+);/.exec(rule[1]);
-  assert.ok(col && row, "missing explicit grid placement for " + selector);
-  return { col: col[1].trim(), row: row[1].trim() };
+  const match = new RegExp(escaped + "\\s*\\{([^}]*)\\}", "m").exec(css);
+  assert.ok(match, "Missing CSS rule: " + selector);
+  return match[1];
+}
+function isThreeColumns(style) {
+  const col = /grid-template-columns:\s*([^;]+);/.exec(style);
+  assert.ok(col, "Missing grid-template-columns");
+  return (col[1].match(/minmax\(0,/g) || []).length === 3;
 }
 
-test("Aura Classic power + speed must share top row while flow spans beneath", () => {
-  const power = gridPlacement(".gauge-aura:not(.enhanced) .aura-power");
-  const speed = gridPlacement(".gauge-aura:not(.enhanced) .aura-velocity");
-  const flow = gridPlacement(".gauge-aura:not(.enhanced) .aura-flow");
-  assert.deepEqual(power, { col: "1", row: "1" });
-  assert.deepEqual(speed, { col: "2", row: "1" });
-  assert.deepEqual(flow, { col: "1 / -1", row: "2" });
+test("P6 Aura Classic: POWER, energy center and SPEED share one row", () => {
+  const rule = ruleFor(".aura-cluster-body");
+  assert.match(rule, /display:grid/);
+  assert.ok(isThreeColumns(rule));
+  const names = [
+    'class="aura-dial aura-power"',
+    'class="aura-center-panel"',
+    'class="aura-dial aura-velocity"'
+  ];
+  const indexes = names.map(n => markup.indexOf(n));
+  assert.ok(indexes.every(v => v >= 0), "Missing original cluster region");
+  assert.ok(indexes[0] < indexes[1] && indexes[1] < indexes[2],
+    "DOM placement must match the 3 grid columns");
 });
 
-test("enhanced layout remains independently three-column", () => {
-  assert.match(css, /\.gauge-aura\.enhanced \.aura-layout\s*\{grid-template-columns:\s*minmax\(0,\.7fr\) minmax\(0,1\.6fr\) minmax\(0,\.7fr\)/);
-  assert.match(css, /\.gauge-aura\.enhanced \.aura-velocity\s*\{grid-column:3;grid-row:1/);
+test("P6 Enhanced preserves both outside dials and expands middle", () => {
+  const enhanced = ruleFor(".gauge-aura.enhanced .aura-cluster-body");
+  assert.ok(isThreeColumns(enhanced));
+  assert.match(enhanced, /minmax\(0,1\.35fr\)/);
+  assert.ok(ruleFor(".gauge-aura.enhanced .aura-center-panel").includes("padding"));
+  assert.ok(markup.includes('data-gauge="AURA"'));
 });
 
-test("Aura dial and energy panels are still part of the instrument template", () => {
-  for (const className of ["aura-power", "aura-velocity", "aura-flow"]) {
-    assert.ok(markup.includes(`class="${className}`) ||
-      markup.includes(`class="aura-analog ${className}`));
-  }
+test("P6 narrow phones do not use single column and never stack Aura dials", () => {
+  const breakpoint = css.indexOf("@media(max-width:390px)");
+  assert.ok(breakpoint !== -1);
+  const remaining = css.slice(breakpoint);
+  const mobile = /\.aura-cluster-body\{[^}]*grid-template-columns:([^;}]+)/.exec(remaining);
+  assert.ok(mobile, "No mobile-specific dial grid");
+  assert.equal((mobile[1].match(/minmax\(0,/g)||[]).length, 3);
+  assert.match(css, /\.aura-dial\{[^}]*min-width:0/);
+  assert.match(css, /\.gauge-skin\[hidden\]\{display:none!important\}/);
+});
+
+test("P6 generated SVG dial, speed, charge and energy displays are available", () => {
+  assert.ok(markup.includes('auraRingSvg("power")'));
+  assert.ok(markup.includes('auraRingSvg("speed")'));
+  for(const field of [
+    'data-field="aura-flow"', 'data-field="aura-speed"',
+    'data-field="aura-power"', 'data-field="aura-soc"'
+  ]) assert.ok(markup.includes(field),field);
 });
