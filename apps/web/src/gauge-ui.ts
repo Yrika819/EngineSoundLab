@@ -45,13 +45,13 @@ export function createGaugePanel(dial: HTMLElement, energyPanel: HTMLElement) {
         <div class="prius-center-display" role="group" aria-label="速度とハイブリッドシステムインジケーター">
           ${priusArcSvg()}
           <div class="prius-speed-readout">
-            <span class="prius-gear">D</span>
             <strong data-field="prius-speed">0</strong>
             <small>km/h</small>
           </div>
           <span class="prius-ev-badge" data-field="prius-ev">EV</span>
         </div>
         <aside class="prius-right-readout">
+          <span class="prius-gear" aria-label="シフト位置D">D</span>
           <span class="cluster-tiny">BATTERY SOC</span>
           <strong data-field="prius-soc">63%</strong>
           <div class="battery-gauge" data-battery="prius" aria-label="電池残量の簡易表示">
@@ -201,6 +201,9 @@ export function createGaugePanel(dial: HTMLElement, energyPanel: HTMLElement) {
     aura.hidden = !isAura;
     tech.hidden = gauge.layout !== "ENGINEERING";
     aura.classList.toggle("enhanced", gauge.layout === "AURA_ENHANCED");
+    aura.classList.toggle("regenerating", gauge.zone === "CHARGE");
+    aura.classList.toggle("generating", gauge.engineRunning && gauge.generatorPowerKw > 0.1);
+    aura.dataset.layout = gauge.layout;
     // Real-car-inspired displays are self-contained; ENGINEERING preserves
     // full raw telemetry and does not fabricate trip/range/temperature data.
     energyPanel.hidden = gauge.layout !== "SPORT" || vehicle.batterySoc === null;
@@ -208,7 +211,9 @@ export function createGaugePanel(dial: HTMLElement, energyPanel: HTMLElement) {
     if (gauge.layout === "PRIUS") {
       const state = meterState(gauge);
       set("prius-engine", gauge.engineRunning ? "ENGINE ON" : "EV READY");
-      set("prius-drive", state.mode);
+      // P6.2: short sidebar label on 320px; footer preserves the full state.
+      set("prius-drive", state.mode === "GENERATING" ? "GEN" : state.mode);
+      field("prius-drive").setAttribute("aria-label", state.mode);
       set("prius-flow", state.flow);
       set("prius-speed", String(gauge.speedKmh));
       set("prius-motor-kw", gauge.motorPowerKw.toFixed(1) + " kW");

@@ -90,3 +90,13 @@ test("P6 Aura is a 3-column cluster at every responsive breakpoint", () => {
     ui.indexOf("class=\"aura-dial aura-velocity\""));
   assert.ok(css.includes(".gauge-skin[hidden]{display:none!important}"));
 });
+
+test("P6.2 indicators use peripheral pointers that never cross the central readout",()=>{
+  for (const which of ["power","speed"] as const) {
+    const svg=auraRingSvg(which);
+    assert.ok(svg.includes('data-peripheral-needle="'+which+'"'));
+    assert.ok(svg.includes("M 100 10 L 94.6 28 L 105.4 28 Z"));
+    assert.ok(!svg.includes("97.8 108"),"Old long needle would cover readout");
+    assert.ok(svg.includes("gauge-surface-"+which));
+  }
+});

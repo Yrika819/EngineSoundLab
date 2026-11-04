@@ -50,11 +50,11 @@ export function auraRingSvg(kind: "power" | "speed"): string {
   const speed = kind === "speed";
   const start = speed ? -132 : -116;
   const stop = speed ? 132 : 132;
-  const divisions = speed ? 36 : 40;
+  const divisions = speed ? 48 : 56;
   let ticks = "";
   for (let i = 0; i <= divisions; i++) {
     const angle = start + (stop - start) * i / divisions;
-    ticks += tick(angle, i % (speed ? 4 : 8) === 0);
+    ticks += tick(angle, i % (speed ? 6 : 8) === 0);
   }
   const labels = speed
     ? [0, 40, 80, 120, 160].map(v =>
@@ -64,19 +64,26 @@ export function auraRingSvg(kind: "power" | "speed"): string {
   const ring = arcPath(start, stop, 89);
   const chargeArc = arcPath(-137, -117, 75);
   return `<svg viewBox="0 0 200 200" role="img" aria-label="${speed ? "速度計の目盛り" : "パワーメーターの目盛り"}">
-    <defs><filter id="gauge-glow-${kind}" x="-70%" y="-70%" width="240%" height="240%">
-      <feGaussianBlur stdDeviation="3"/></filter>
+    <defs>
+      <radialGradient id="gauge-surface-${kind}" cx="42%" cy="30%" r="80%">
+        <stop offset="0" stop-color="#1b2939"/>
+        <stop offset=".7" stop-color="#0b1220"/>
+        <stop offset="1" stop-color="#03070f"/>
+      </radialGradient>
     </defs>
+    <circle cx="100" cy="100" r="95" class="dial-bezel-rim"/>
     <circle cx="100" cy="100" r="93" class="dial-bezel"/>
-    <circle cx="100" cy="100" r="86" class="dial-bezel-inset"/>
+    <circle cx="100" cy="100" r="85" class="dial-bezel-inset" fill="url(#gauge-surface-${kind})"/>
+    <circle cx="100" cy="100" r="66" class="dial-inner-rule"/>
     <path d="${ring}" class="dial-track"/>
     ${speed ? "" : `<path d="${chargeArc}" class="dial-charge-tick"/>`}
     <g>${ticks}</g>
     ${labels}
     <path data-ring="${speed ? "speed" : "power"}" class="dial-progress" d=""/>
     <g data-needle="${speed ? "speed" : "power"}" transform="rotate(${speed ? -132 : -116} 100 100)">
-      <path d="M 97.8 108 L 99.2 29 Q 100 24 100.8 29 L 102.2 108 Z" class="dial-pointer"/>
-      <circle cx="100" cy="100" r="6.5" class="dial-hub"/>
+      <!-- short illuminated peripheral marker cannot overlap center numerals -->
+      <path d="M 100 10 L 94.6 28 L 105.4 28 Z" class="dial-pointer"
+        data-peripheral-needle="${kind}"/>
     </g>
   </svg>`;
 }
@@ -94,6 +101,7 @@ export function priusArcSvg(): string {
     <path d="${charge}" class="prius-arc-charge"/>
     <path d="${eco}" class="prius-arc-eco"/>
     <path d="${pwr}" class="prius-arc-power"/>
+    <path d="${arcPath(-165,135,80)}" class="prius-outer-guide"/>
     <g class="prius-ticks">${marks}</g>
     <path d="" data-ring="prius" class="prius-arc-live"/>
     <text x="23" y="143" class="prius-arc-caption">CHG</text>
