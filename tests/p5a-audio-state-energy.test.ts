@@ -178,3 +178,39 @@ test("P5-A: invalid audio numeric state is clamped and generic ICE has no false 
   assert.equal(invalid.tractionShaftRpm, 0);
   assert.equal(invalid.speedMps, 0);
 });
+
+test("P5-A: engine does not claim STOPPED while it still spins", () => {
+  let s: DriveState = {
+    ...makeDriveState("aura_fe13_epower"),
+    engineOperation: "STOPPING",
+    enginePhase: "STOPPING",
+    phaseTimeSec: 0.9,
+    rpm: 900,
+    batterySoc: 0.7
+  };
+  let max = 0;
+  for (let i = 0; i < 500; i++) {
+    s = step(s, 0, 0);
+    if (s.engineOperation === "STOPPED") {
+      assert.ok(s.rpm < 30);
+      max++;
+    }
+  }
+  assert.ok(max > 0, "engine never reached a stopped state");
+  assert.equal(s.rpm, 0);
+  assert.equal(toAudioTelemetry(s).engineRotating, false);
+});
+
+test("P5-A: corrupted battery power input is handled with finite caps", () => {
+  const limits = batteryPowerLimits(NaN, 0.01);
+  assert.equal(limits.dischargeKw, 0);
+  assert.ok(Number.isFinite(limits.chargeKw));
+  const s = step({
+    ...makeDriveState("aura_fe13_epower"),
+    batterySoc: NaN,
+    rpm: NaN
+  }, NaN, NaN);
+  assert.ok(Number.isFinite(s.batterySoc));
+  assert.ok(Number.isFinite(s.rpm));
+  assert.ok(Number.isFinite(s.motorPowerKw));
+});
