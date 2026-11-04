@@ -211,6 +211,28 @@ test.describe("P6.1 real mobile browser visual matrix", () => {
     });
   }
 
+  test("Aura generator-to-battery lane only activates when generator is charging the pack",
+    async({page})=>{
+      await page.setViewportSize({width:390,height:780});
+      await page.goto("/");
+      await page.waitForFunction(()=>typeof window.__ESL_VISUAL_QA__==="function");
+      await page.evaluate(()=>window.__ESL_VISUAL_QA__("aura_fe13_epower","ACCEL"));
+      const aura=page.locator(".gauge-aura");
+      await expect(aura).toHaveAttribute("data-energy-flow","generation");
+      await expect(aura).toHaveAttribute("data-battery-charging","false");
+      await expect(aura.locator('[data-route="charging"]')).toHaveCSS("opacity","0");
+      await page.evaluate(()=>window.__ESL_VISUAL_QA__("aura_fe13_epower","GEN_CHARGE"));
+      await expect(aura).toHaveAttribute("data-energy-flow","generation");
+      await expect(aura).toHaveAttribute("data-battery-charging","true");
+      await expect(aura.locator('[data-route="generation"]')).toHaveCSS("opacity","1");
+      await expect(aura.locator('[data-route="charging"]')).toHaveCSS("opacity","1");
+      await expect(aura.locator('[data-route="regen"]')).toHaveCSS("opacity","0");
+      // A pure regeneration state has no separate combustion generator feed.
+      await page.evaluate(()=>window.__ESL_VISUAL_QA__("aura_fe13_epower","REGEN"));
+      await expect(aura).toHaveAttribute("data-energy-flow","regen");
+      await expect(aura.locator('[data-route="charging"]')).toHaveCSS("opacity","0");
+    });
+
   test("reduced-motion preference leaves accurate static flow arrows without animated needles",
     async({page})=>{
       await page.emulateMedia({reducedMotion:"reduce"});
