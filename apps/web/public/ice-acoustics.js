@@ -124,9 +124,8 @@ export class VehicleIceAcoustics {
     this.motoringLag = Math.exp(-1 / (rate * 0.028));
   }
 
-  /**
-   * @returns {[number,number]} NOT used: next() avoids returning arrays per
-   * sample and exposes rendered combustion and motoring voices as properties.
+  /** No arrays or objects are allocated per sample. Rendered combustion
+   * and non-fuelled motoring voices are read from instance fields.
    */
   next(pressure, crankRadians, rpm, load, throttle, white,
        combustionGate, motoringLevel, profileCode) {

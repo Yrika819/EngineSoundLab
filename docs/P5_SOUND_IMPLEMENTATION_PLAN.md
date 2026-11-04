@@ -128,3 +128,12 @@
 - Actual FE13 engine-drag threshold, available battery energy, gear ratio, motor maps and electric sound spectral gains are **not verified against OEM vehicle calibration**.
 - P5-B/C will refine combustion/non-combustion mechanical voices, traction & generator frequency profiles and cabin masking.
 - P5-A is a functional engineering-model hardening step, not completed real-world fidelity validation.
+
+
+## P5-B initial delivery (PR — vehicle-specific ICE acoustics)
+
+- Prototype dedicated `ice-acoustics.js` provides two estimated combustion profiles (Prius I4, Aura HR12DE I3) with separate resonators, load-dependent induction noise, combustion pulse edge color and restrained mechanical orders.
+- Sound profiles can be switched without reconstructing WebAudio; transitions use smoothed crossfading.
+- Adds distinct starter/generator-assisted mechanical rotation audio for unfuelled engine operation; combustion pressure continues to follow P5-A fuelled gate exclusively.
+- Adds offline regression at 44.1/48/96kHz; PWA preloads the new module. **These tests prove algorithmic stability, not verified OEM sound similarity.**
+- P5-C electric sources, P5-D cabin masking and P5-E listening/real-car comparison remain outstanding.

@@ -60,3 +60,23 @@ Reference drivetrain topology only:
 - The exact P3+ normalized motor/regen/generator loudness values remain initially compatible. Redesigning their real-car spectral character is P5-B/P5-C; no manufacturer-calibrated PWM/order or equalizer values have been added.
 - The converter is deterministic, clamps invalid input values, and does not read DOM meter values. `CABIN` is the default future listening mode; cabinet/engine-bay acoustics are reserved for P5-D.
 - The existing P1 AudioWorklet's single combustion control remains; un-fuelled rotating machinery is **not** falsely passed through as fuelled combustion. Adding its mechanical voice is planned in P5-B.
+
+
+## P5-B: Prius and Aura separate procedural combustion timbre
+
+Added `apps/web/public/ice-acoustics.js`, a **recording-free model** built from per-cylinder four-stroke pressure pulses produced by `EngineSynthCore`, two separately tuned pipe/body resonators per car, load-sensitive induction air turbulence, crankshaft-order components and short throttle transients. The original generic I3/I4/I6 sound remains selectable. The car selection automatically chooses the Prius or Aura timbre layer; the manual sound selector still changes cylinder firing geometry only.
+
+- Prius 60-series 2.0 HEV: I4 2.0 firing order, stronger low-frequency exhaust body, and attenuated harsh edge/mid-band relative to the generic profile. This follows the **direction** of the Prius developer's low-frequency emphasis remarks; our EQ/resonances are estimated and NOT factory measurements.
+- Aura FE13 HR12DE: I3 1.5 firing order with quieter mechanical imbalance and restrained higher-frequency pressure edge to reflect Nissan's outer balancer/noise mitigation design. It is NOT a recording or engine-specific factory spectral measurement.
+- `VehicleIceAcoustics` crossfades vehicle sound color over approximately 90ms, keeping both resonator banks warm through transitions.
+- `engineMotoring` is a new independent AudioWorklet control, following `engineOperation` for STARTING/STOPPING/SPINNING_UNFUELLED; engine RPM alone never forces fuelled exhaust. Mechanical engine rotation without combustion can now make a subtle sound without an ignition impulse.
+- All new synthesis remains inside the existing worklet, with no third-party audio assets and no per-sample allocations of arrays/objects.
+- `ice-acoustics.js` joins the versioned PWA precache so offline synthesis continues to work.
+
+WebAudio controls: `iceProfile` (0 generic, 1 Prius-inspired, 2 Aura-inspired), `engineMotoring` (0..1). `AudioTelemetry` is the source of truth. Numeric resonator parameters, amplitudes, RPM curves and acoustic blends are synthetic **estimates**. Future P5-C addresses electric-machine tuning; P5-D will perform explicit cabin/engine-bay transfer/road masking. A recording-based real-car validation has **not** been performed.
+
+Manufacturer background:
+- https://www.nissan-global.com/JP/INNOVATION/TECHNOLOGY/ARCHIVE/HR12DE/ — balance/quietness of the HR12DE.
+- https://www2.nissan-global.com/EN/INNOVATION/TECHNOLOGY/ARCHIVE/E_POWER_GEN2/ — second generation e-POWER road-noise masking.
+- https://car.watch.impress.co.jp/docs/event_repo/2023aee/1503945.html — Prius engineer interview on sound shaping (reported speech, not measured transfer function).
+- https://manual.toyota.jp/prius/ — hybrid engine/EV operating states.

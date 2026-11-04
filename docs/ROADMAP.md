@@ -13,3 +13,6 @@ A working procedural **accelerating car sound** on a phone is the next deliverab
 **Execution policy**: implementation delegated for routine decisions; work through small PRs, require green CI before merge, record measurable results. No autonomous activity between explicit tool-equipped sessions.
 
 Full details: [Implementation plan](IMPLEMENTATION_PLAN.md).
+
+
+**P5-B acoustic DSP slice:** independent inline-four Prius and inline-three Aura combustion timbre profiles plus engine motoring layer; objective synthesis tests and regression checks. OEM acoustic matching and physical-device listening remain later QA.
