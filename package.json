@@ -9,7 +9,8 @@
     "typecheck": "tsc --noEmit",
     "test": "node --import tsx --test tests/*.test.mjs tests/*.test.ts",
     "check": "npm run typecheck && npm test && npm run build && node --test tests/pwa-build.verify.mjs",
-    "test:visual": "playwright test --config=playwright.config.mjs"
+    "test:visual": "playwright test --config=playwright.config.mjs",
+    "audio:qa": "node tools/p5e-acoustic-qa.mjs --out-dir test-results/p5e-audio"
   },
   "devDependencies": {
     "typescript": "~5.9.3",
