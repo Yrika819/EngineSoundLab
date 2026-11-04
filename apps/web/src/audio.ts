@@ -86,6 +86,13 @@ export class EngineAudio {
       set("generator", telemetry.generatorAmplitude, 0.04);
       set("generatorRpm", telemetry.generatorShaftRpm, 0.04);
       set("electricProfile", telemetry.electricProfile, 0.075);
+      // These are categorical states: setValueAtTime, NOT a smoothed ramp.
+      // Interpolating STARTING(1) -> SPINNING_UNFUELLED(3) would transiently
+      // create RUNNING_FUELLED(2) and an incorrect combustion pulse.
+      this.worklet.parameters.get("engineOperation")?.setValueAtTime(
+        telemetry.engineOperationCode, now);
+      this.worklet.parameters.get("iceVehicle")?.setValueAtTime(
+        telemetry.electricProfile, now);
     } else {
       const cylinders = this.profile === "i3" ? 3 : this.profile === "i6" ? 6 : 4;
       const hz = telemetry.combustionGate
