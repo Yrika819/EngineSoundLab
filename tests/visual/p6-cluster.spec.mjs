@@ -138,6 +138,10 @@ test.describe("P6.1 real mobile browser visual matrix", () => {
           await expect(skin.locator('[data-field="prius-drive"]')).toHaveText("GEN");
           await expect(skin.locator('[data-field="prius-drive"]'))
             .toHaveAttribute("aria-label","GENERATING");
+          await expect(skin.locator('[data-field="prius-flow"]'))
+            .toHaveText("発電中");
+          await expect(skin.locator('[data-field="prius-flow"]'))
+            .toHaveAttribute("aria-label","エンジン → 発電");
         }
       }
 
