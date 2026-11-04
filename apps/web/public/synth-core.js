@@ -105,7 +105,7 @@ export class EngineSynthCore {
        targetRegen = 0, targetGenerator = 0, targetGeneratorRpm = 0,
        electricProfile = 0, iceProfile = 0, engineMotoring = 0,
        motorTorque = 0, generatorMotoring = 0,
-       listeningMode = 0, roadRoughness = 0.35) {
+       listeningMode = 0, roadRoughness = 0.35, electricFocus = 0) {
     const rpm = clamp(targetRpm, 0, 8000, 850);
     const load = clamp(targetLoad, 0, 1);
     const throttle = clamp(targetThrottle, 0, 1);
@@ -191,7 +191,7 @@ export class EngineSynthCore {
     const generatorBus = this.electric.lastGenerator + this.electric.lastMotoring;
     const mix = this.soundstage.next(combustionVoice,
       this.iceAcoustics.motoringVoice, tractionBus, generatorBus,
-      this.speed, iceProfile, listeningMode, roadRoughness);
+      this.speed, iceProfile, listeningMode, roadRoughness, electricFocus);
     // DC block + bounded saturation; no sample value leaves [-0.54, +0.54].
     this.hp = mix - this.prevMix + 0.995 * this.hp;
     this.prevMix = mix;
