@@ -53,7 +53,7 @@ const AURA_MOTOR_GEAR = 7.2; // illustrative reduction ratio
  */
 export function batteryPowerLimits(soc: number, dt: number) {
   if (!Number.isFinite(dt) || dt <= 0 || dt > 0.05) throw new RangeError("invalid dt");
-  const safeSoc = clamp(soc, SOC_MIN, SOC_MAX);
+  const safeSoc = Number.isFinite(soc) ? clamp(soc, SOC_MIN, SOC_MAX) : SOC_MIN;
   const kwhPerStep = BATTERY_KWH * 3600 / dt;
   return {
     dischargeKw: Math.max(0, Math.min(MAX_BATTERY_DISCHARGE_KW,
@@ -100,7 +100,7 @@ function advancePhase(
   else if (phase === "STARTING" && elapsed >= 0.55) { phase = "RUNNING"; elapsed = 0; }
   else if (phase === "RUNNING" && !request && elapsed >= 4.5) {
     phase = "STOPPING"; elapsed = 0;
-  } else if (phase === "STOPPING" && elapsed >= 0.85) {
+  } else if (phase === "STOPPING" && elapsed >= 0.85 && state.rpm < 30) {
     phase = "STOPPED"; elapsed = 0;
   }
   return { phase, phaseTimeSec: elapsed };
@@ -108,14 +108,16 @@ function advancePhase(
 
 function rpmTowards(previous: number, target: number, dt: number): number {
   const tau = target > previous ? 0.34 : 0.55;
-  return Math.max(0, previous + (target - previous) * (1 - Math.exp(-dt / tau)));
+  const result = Math.max(0, previous + (target - previous) * (1 - Math.exp(-dt / tau)));
+  return target === 0 && result < 5 ? 0 : result;
 }
 
 function simulateHybrid(state: DriveState, controls: DriverInput, dt: number): DriveState {
-  const gas = clamp(controls.throttle, 0, 1);
-  const brake = clamp(controls.brake, 0, 1);
-  const speed = state.speedMps;
-  const soc = clamp(state.batterySoc ?? 0.63, SOC_MIN, SOC_MAX);
+  const gas = Number.isFinite(controls.throttle) ? clamp(controls.throttle, 0, 1) : 0;
+  const brake = Number.isFinite(controls.brake) ? clamp(controls.brake, 0, 1) : 0;
+  const speed = Number.isFinite(state.speedMps) ? Math.max(0, state.speedMps) : 0;
+  const socValue = state.batterySoc ?? 0.63;
+  const soc = Number.isFinite(socValue) ? clamp(socValue, SOC_MIN, SOC_MAX) : SOC_MIN;
   const isSeries = state.vehicleId === "aura_fe13_epower";
   const limits = batteryPowerLimits(soc, dt);
   const wheelRpm = speed / (2 * Math.PI * TYRE_RADIUS_M) * 60;
@@ -158,7 +160,7 @@ function simulateHybrid(state: DriveState, controls: DriverInput, dt: number): D
       ? clamp(1550 + gas * 950 + Math.max(0, 0.63 - soc) * 6500, 1250, 4100)
       : clamp(1150 + gas * 2650 + speed * 24 +
               Math.max(0, 0.58 - soc) * 4300, 1100, 5000);
-  const rpm = rpmTowards(state.rpm, targetEngineRpm, dt);
+  const rpm = rpmTowards(Number.isFinite(state.rpm) ? state.rpm : 0, targetEngineRpm, dt);
 
   // Estimate initial generator capability. A series HEV can drive wheels only
   // through its electric motor, regardless of engine running state.
