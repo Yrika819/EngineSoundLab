@@ -1,4 +1,5 @@
 import type { DriveState } from "./powertrains";
+import { toAudioTelemetry } from "./audio-telemetry";
 
 export type EngineSoundProfile = "i3" | "i4" | "i6";
 
@@ -69,38 +70,32 @@ export class EngineAudio {
   update(state: DriveState, throttleInput = state.load): void {
     if (!this.active || !this.context) return;
     const now = this.context.currentTime;
-    const rpm = Number.isFinite(state.rpm) ? state.rpm : 850;
-    const load = Number.isFinite(state.load) ? state.load : 0;
+    const telemetry = toAudioTelemetry(state, throttleInput);
     if (this.worklet) {
-      this.worklet.parameters.get("rpm")?.setTargetAtTime(rpm, now, 0.025);
-      this.worklet.parameters.get("load")?.setTargetAtTime(load, now, 0.025);
-      this.worklet.parameters.get("throttle")?.setTargetAtTime(Math.max(0, Math.min(1, throttleInput)), now, 0.025);
-      this.worklet.parameters.get("speed")?.setTargetAtTime(Math.max(0, state.speedMps), now, 0.04);
-      this.worklet.parameters.get("combustion")?.setTargetAtTime(state.combustionActive?1:0,now,0.025);
-      this.worklet.parameters.get("motor")?.setTargetAtTime(
-        Math.min(1,Math.abs(state.motorPowerKw)/65),now,0.03);
-      this.worklet.parameters.get("motorRpm")?.setTargetAtTime(
-        Math.max(0, Math.abs(state.mg2Rpm)), now, 0.035);
-      // Regen power is sign-consistent with negative mechanical wheel power.
-      // Dedicated electric channels remain independent of combustion RPM.
-      this.worklet.parameters.get("regen")?.setTargetAtTime(
-        Math.min(1, Math.max(0, state.regenPowerKw) / 24), now, 0.04);
-      this.worklet.parameters.get("generator")?.setTargetAtTime(
-        Math.min(1, Math.max(0, state.generatorPowerKw) / 32), now, 0.04);
-      this.worklet.parameters.get("generatorRpm")?.setTargetAtTime(
-        Math.max(0, Math.abs(state.mg1Rpm)), now, 0.04);
-      const electricProfile = state.vehicleId === "prius_60_hev" ? 1 :
-        state.vehicleId === "aura_fe13_epower" ? 2 : 0;
-      this.worklet.parameters.get("electricProfile")?.setTargetAtTime(
-        electricProfile, now, 0.075);
+      const set = (name: string, value: number, smoothing: number) =>
+        this.worklet?.parameters.get(name)?.setTargetAtTime(value, now, smoothing);
+      set("rpm", telemetry.engineRpm, 0.025);
+      set("load", telemetry.engineLoad, 0.025);
+      set("throttle", telemetry.throttle, 0.025);
+      set("speed", telemetry.speedMps, 0.04);
+      // A spinning engine does not imply a fuelled ignition pulse.
+      set("combustion", telemetry.combustionGate, 0.025);
+      set("motor", telemetry.motorAmplitude, 0.03);
+      set("motorRpm", telemetry.tractionShaftRpm, 0.035);
+      set("regen", telemetry.regenAmplitude, 0.04);
+      set("generator", telemetry.generatorAmplitude, 0.04);
+      set("generatorRpm", telemetry.generatorShaftRpm, 0.04);
+      set("electricProfile", telemetry.electricProfile, 0.075);
     } else {
       const cylinders = this.profile === "i3" ? 3 : this.profile === "i6" ? 6 : 4;
-      const hz=state.combustionActive?Math.max(20,rpm*cylinders/120):
-        Math.max(80,Math.abs(state.mg2Rpm)*6/60);
-      this.fallback?.frequency.setTargetAtTime(hz,now,0.035);
-      this.master?.gain.setTargetAtTime(state.combustionActive?0.32:
-        Math.min(0.14,Math.abs(state.motorPowerKw)/400),now,0.06);
-      this.filter?.frequency.setTargetAtTime(400 + 2400 * load, now, 0.05);
+      const hz = telemetry.combustionGate
+        ? Math.max(20, telemetry.engineRpm * cylinders / 120)
+        : Math.max(80, telemetry.tractionShaftRpm * 6 / 60);
+      this.fallback?.frequency.setTargetAtTime(hz, now, 0.035);
+      this.master?.gain.setTargetAtTime(telemetry.combustionGate ? 0.32 :
+        Math.min(0.14, Math.abs(telemetry.tractionPowerKw) / 400), now, 0.06);
+      this.filter?.frequency.setTargetAtTime(
+        400 + 2400 * telemetry.engineLoad, now, 0.05);
     }
   }
 
