@@ -277,8 +277,8 @@ export function createGaugePanel(dial: HTMLElement, energyPanel: HTMLElement) {
         return { mode: "HYBRID DRIVE", flow: "エンジン＋モーター → 車輪",
           detail: "HEV駆動（動力分割式）" };
       case "ENGINE_ON":
-        return { mode: "ENGINE ON", flow: "エンジン稼働（発電なし）",
-          detail: "エンジン稼働中" };
+        return { mode: "ENGINE ON", flow: "電池 → モーター（発電なし）",
+          detail: "エンジン稼働・発電なし" };
       case "SPINNING":
         return { mode: "SPINNING", flow: "燃焼なし回転", detail: "燃焼なし回転" };
       default:
@@ -304,6 +304,8 @@ export function createGaugePanel(dial: HTMLElement, energyPanel: HTMLElement) {
     aura.dataset.energyFlow = energyMode.toLowerCase();
     aura.dataset.batteryCharging = energyMode === "GENERATION" &&
       gauge.batteryPowerKw < -0.1 ? "true" : "false";
+    aura.dataset.motorDrive = gauge.motorPowerKw > 0.1 ? "true" : "false";
+    aura.dataset.batteryDischarging = gauge.batteryPowerKw > 0.1 ? "true" : "false";
     prius.dataset.energyFlow = energyMode.toLowerCase();
     aura.dataset.layout = gauge.layout;
     // Real-car-inspired displays are self-contained; ENGINEERING preserves
