@@ -414,7 +414,7 @@ body{overscroll-behavior-x:none}
 .gauge-aura .aura-energy-route .energy-flow-lane{
  fill:none;stroke:#83dbe0;stroke-width:3;stroke-linecap:round;
  stroke-linejoin:round;stroke-dasharray:6 6;
- animation:esl-energy-stream .95s linear infinite;
+ animation:none;
 }
 .gauge-aura .aura-energy-route .energy-flow-head{
  fill:none;stroke:#83dbe0;stroke-width:2.8;
@@ -449,7 +449,17 @@ body{overscroll-behavior-x:none}
 .gauge-aura[data-energy-flow="generation"] [data-arrow="generation"]{
  stroke:#adf0d2;
 }
-.gauge-aura[data-energy-flow="regen"] .energy-flow-lane{
+/* Animate only the source lane that is genuinely carrying power. */
+.gauge-aura[data-energy-flow="ev"] [data-route="ev"],
+.gauge-aura[data-energy-flow="regen"] [data-route="regen"],
+.gauge-aura[data-energy-flow="generation"] [data-route="generation"],
+.gauge-aura[data-energy-flow="generation"][data-battery-charging="true"]
+  [data-route="charging"]{
+ animation:esl-energy-stream .95s linear infinite;
+}
+.gauge-aura[data-energy-flow="regen"] [data-route="regen"],
+.gauge-aura[data-energy-flow="generation"][data-battery-charging="true"]
+  [data-route="charging"]{
  animation-direction:reverse;
 }
 .gauge-aura[data-energy-flow="generation"] .energy-flow-lane{
