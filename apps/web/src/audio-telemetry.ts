@@ -29,6 +29,8 @@ export interface AudioTelemetry {
   engineMotoringElectricalKw: number;
   batterySoc: number | null;
   electricProfile: 0 | 1 | 2;
+  iceProfile: 0 | 1 | 2;
+  engineMotoringAmplitude: number;
   listenerMode: AudioListenerMode;
 }
 
@@ -78,6 +80,13 @@ export function toAudioTelemetry(
       ? bounded(state.engineMotoringElectricalKw, 0, 100) : 0,
     batterySoc: hasMotor ? bounded(state.batterySoc ?? 0, 0, 1) : null,
     electricProfile,
+    iceProfile: electricProfile,
+    // Starter/generator-assisted start and non-fuelled engine rotation
+    // have a mechanical voice but produce ZERO combustion pressure.
+    engineMotoringAmplitude: operation === "SPINNING_UNFUELLED"
+      ? bounded(0.25 + state.engineMotoringElectricalKw / 5, 0, 1)
+      : operation === "STARTING" ? 0.45
+      : operation === "STOPPING" ? 0.18 : 0,
     listenerMode
   };
 }
