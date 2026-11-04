@@ -498,7 +498,10 @@ body{overscroll-behavior-x:none}
 /* Motion preference applies to all decorative energy animations.
    The exact speed, SOC and numeric power readouts remain instantly updated. */
 @media(prefers-reduced-motion:reduce){
- .gauge-aura .aura-energy-route .energy-flow-lane,
+ /* De-animate, but do NOT reveal hidden/unauthorized energy paths. */
+ .gauge-aura .aura-energy-route .energy-flow-lane{
+  animation:none;transform:none;
+ }
  .gauge-prius .prius-flow-strip i{
   animation:none;opacity:1;transform:none;
  }
