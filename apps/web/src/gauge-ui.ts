@@ -214,7 +214,13 @@ export function createGaugePanel(dial: HTMLElement, energyPanel: HTMLElement) {
       // P6.2: short sidebar label on 320px; footer preserves the full state.
       set("prius-drive", state.mode === "GENERATING" ? "GEN" : state.mode);
       field("prius-drive").setAttribute("aria-label", state.mode);
-      set("prius-flow", state.flow);
+      // Tight left information column: the complete path is available to
+      // assistive technology; concise visible text avoids orphaned kanji.
+      const displayFlow = state.mode === "GENERATING" ? "発電中"
+        : state.mode === "REGEN" ? "回生充電"
+        : state.mode === "EV DRIVE" ? "電池 → モーター" : state.flow;
+      set("prius-flow", displayFlow);
+      field("prius-flow").setAttribute("aria-label", state.flow);
       set("prius-speed", String(gauge.speedKmh));
       set("prius-motor-kw", gauge.motorPowerKw.toFixed(1) + " kW");
       set("prius-state", state.detail);
