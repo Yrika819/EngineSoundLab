@@ -59,8 +59,11 @@ test("P5-D: coarse pavement increases tyre texture but not powertrain phase",()=
   const smooth=render({speed:22,surface:0,engine:0.08});
   const rough=render({speed:22,surface:1,engine:0.08});
   assert.ok(rough.tyreRms>smooth.tyreRms*1.4);
-  assert.ok(Math.abs(rough.engineRms-smooth.engineRms)<1e-10,
-    "road selection should not change isolated ICE source");
+  // More background masks the same ICE, but the optional masking
+  // attenuation is deliberately mild and never boosts combustion.
+  assert.ok(rough.engineRms<=smooth.engineRms+1e-9);
+  assert.ok(rough.engineRms>smooth.engineRms*0.88,
+    "road roughness should not aggressively duck the engine");
   assert.ok(Math.abs(rough.windRms-smooth.windRms)<1e-10,
     "road surface is not a fake wind-speed control");
 });
