@@ -426,16 +426,16 @@ body{overscroll-behavior-x:none}
 .gauge-aura .aura-energy-route .energy-generator text{
  fill:#d7ffec;font:bold 9px system-ui,sans-serif;
 }
-.gauge-aura[data-energy-flow="ev"] [data-route="ev"],
-.gauge-aura[data-energy-flow="ev"] [data-arrow="ev"]{
+.gauge-aura[data-energy-flow="ev"][data-motor-drive="true"] [data-route="ev"],
+.gauge-aura[data-energy-flow="ev"][data-motor-drive="true"] [data-arrow="ev"]{
  opacity:1;
 }
 .gauge-aura[data-energy-flow="regen"] [data-route="regen"],
 .gauge-aura[data-energy-flow="regen"] [data-arrow="regen"]{
  opacity:1;stroke:#7dccf5;
 }
-.gauge-aura[data-energy-flow="generation"] [data-route="generation"],
-.gauge-aura[data-energy-flow="generation"] [data-arrow="generation"],
+.gauge-aura[data-energy-flow="generation"][data-motor-drive="true"] [data-route="generation"],
+.gauge-aura[data-energy-flow="generation"][data-motor-drive="true"] [data-arrow="generation"],
 .gauge-aura[data-energy-flow="generation"] .energy-generator{
  opacity:1;
 }
@@ -501,5 +501,29 @@ body{overscroll-behavior-x:none}
  .gauge-aura .aura-energy-route .energy-flow-lane,
  .gauge-prius .prius-flow-strip i{
   animation:none;opacity:1;transform:none;
+ }
+}
+
+
+/* A fuelled Aura engine with no generator output must never illuminate the
+   generator line. Electrical traction can still be battery-powered. */
+.gauge-aura[data-energy-flow="engine_on"][data-motor-drive="true"]
+ [data-route="ev"],
+.gauge-aura[data-energy-flow="engine_on"][data-motor-drive="true"]
+ [data-arrow="ev"],
+.gauge-aura[data-energy-flow="spinning"][data-motor-drive="true"]
+ [data-route="ev"],
+.gauge-aura[data-energy-flow="spinning"][data-motor-drive="true"]
+ [data-arrow="ev"]{opacity:1;stroke:#83dbe0}
+.gauge-aura[data-energy-flow="engine_on"][data-motor-drive="true"]
+ [data-route="ev"],
+.gauge-aura[data-energy-flow="spinning"][data-motor-drive="true"]
+ [data-route="ev"]{
+ animation:esl-energy-stream .95s linear infinite
+}
+@media(prefers-reduced-motion:reduce){
+ .gauge-aura[data-energy-flow="engine_on"] .energy-flow-lane,
+ .gauge-aura[data-energy-flow="spinning"] .energy-flow-lane{
+  animation:none
  }
 }
