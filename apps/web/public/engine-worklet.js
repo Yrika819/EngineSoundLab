@@ -18,6 +18,8 @@ class EngineWorklet extends AudioWorkletProcessor {
       { name: "generator", defaultValue: 0, minValue: 0, maxValue: 1, automationRate: "k-rate" },
       { name: "generatorRpm", defaultValue: 0, minValue: 0, maxValue: 22000, automationRate: "k-rate" },
       { name: "electricProfile", defaultValue: 0, minValue: 0, maxValue: 2, automationRate: "k-rate" },
+      { name: "iceVehicle", defaultValue: 0, minValue: 0, maxValue: 2, automationRate: "k-rate" },
+      { name: "engineOperation", defaultValue: 2, minValue: 0, maxValue: 4, automationRate: "k-rate" },
       { name: "active", defaultValue: 0, minValue: 0, maxValue: 1, automationRate: "k-rate" }
     ];
   }
@@ -46,9 +48,12 @@ class EngineWorklet extends AudioWorkletProcessor {
     const regen = parameters.regen[0], generator = parameters.generator[0];
     const generatorRpm = parameters.generatorRpm[0];
     const electricProfile = Math.round(parameters.electricProfile[0]);
+    const iceVehicle = Math.round(parameters.iceVehicle[0]);
+    const engineOperation = Math.round(parameters.engineOperation[0]);
     for (let i = 0; i < left.length; i++) {
       const value = this.synth.next(rpm, load, throttle, speed, active, combustion,
-        motor, motorRpm, regen, generator, generatorRpm, electricProfile);
+        motor, motorRpm, regen, generator, generatorRpm, electricProfile,
+        iceVehicle, engineOperation);
       left[i] = value;
       if (right) right[i] = value;
     }
