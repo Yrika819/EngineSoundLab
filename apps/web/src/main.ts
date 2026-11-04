@@ -20,6 +20,8 @@ const load=el<HTMLElement>("load"),throttle=el<HTMLElement>("throttle"),gasVal=e
 const dial=el<HTMLDivElement>("dial");
 const soundProfile=el<HTMLSelectElement>("sound-profile");
 const vehicleProfile=el<HTMLSelectElement>("vehicle-profile");
+const listenerModeSelect=el<HTMLSelectElement>("listener-mode");
+const roadSurfaceSelect=el<HTMLSelectElement>("road-surface");
 const energyPanel=el<HTMLElement>("energy-panel");
 const batterySoc=el<HTMLElement>("battery-soc");
 const enginePhaseText=el<HTMLElement>("engine-state");
@@ -39,6 +41,20 @@ let running=false,busy=false,lastFrame=0,accumulator=0,lastPaint=0;
 let animationHandle: number | null = null;
 let audio:EngineAudio|null=null;
 const cancelPedals:Array<()=>void>=[];
+listenerModeSelect.addEventListener("change",()=>{
+ const mode=listenerModeSelect.value;
+ if(mode!=="CABIN" && mode!=="ENGINE_BAY")return;
+ audio?.setListenerMode(mode);
+ hint.textContent=mode==="CABIN"
+  ?"車内での推定遮音・ロードノイズを再現しています。"
+  :"エンジンルーム視点（比較用の合成音・実車録音ではありません）。";
+});
+roadSurfaceSelect.addEventListener("change",()=>{
+ const roughness=Number(roadSurfaceSelect.value);
+ if(![0,0.35,1].includes(roughness))return;
+ audio?.setRoadRoughness(roughness);
+ hint.textContent="路面の粗さに応じてタイヤの走行音を調整しました。";
+});
 
 function bindPedal(button:HTMLButtonElement,key:keyof DriverInput):void {
  let pointer:number|null=null;
@@ -161,6 +177,8 @@ power.addEventListener("click",async()=>{
    else{
      if(!audio)audio=new EngineAudio();
      audio.setProfile(soundProfile.value as EngineSoundProfile);
+     audio.setListenerMode(listenerModeSelect.value==="ENGINE_BAY"?"ENGINE_BAY":"CABIN");
+     audio.setRoadRoughness(Number(roadSurfaceSelect.value));
      await audio.start();
      // A slow AudioWorklet load must not start playback after app backgrounding.
      if(document.hidden){
