@@ -8,9 +8,16 @@ import type { DriveState, EngineOperation, VehicleId } from "./powertrains";
  */
 export type AudioListenerMode = "CABIN" | "ENGINE_BAY";
 
+/** Discrete DSP gate codes. Do not interpolate these integer state IDs. */
+export const ENGINE_OPERATION_CODES = Object.freeze({
+  STOPPED: 0, STARTING: 1, RUNNING_FUELLED: 2,
+  SPINNING_UNFUELLED: 3, STOPPING: 4
+} as const);
+
 export interface AudioTelemetry {
   vehicleId: VehicleId;
   engineOperation: EngineOperation;
+  engineOperationCode: 0 | 1 | 2 | 3 | 4;
   engineRpm: number;
   engineRotating: boolean;
   combustionGate: 0 | 1;
@@ -57,6 +64,7 @@ export function toAudioTelemetry(
   return {
     vehicleId: state.vehicleId,
     engineOperation: operation,
+    engineOperationCode: ENGINE_OPERATION_CODES[operation],
     engineRpm,
     engineRotating: engineRpm > 30,
     combustionGate,
