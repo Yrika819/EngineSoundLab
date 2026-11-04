@@ -1,4 +1,5 @@
 import { ElectricDriveSynth } from "./electric-synth.js";
+import { VehicleCombustionSynth } from "./vehicle-combustion.js";
 
 /**
  * EngineSoundLab original procedural audio DSP, P1 slice.
@@ -64,6 +65,9 @@ export class EngineSynthCore {
     this.resAGain = 1 - aRadius;
     this.resBGain = 1 - bRadius;
     this.electric = new ElectricDriveSynth(rate);
+    this.vehicleIce = new VehicleCombustionSynth(rate, this.seed ^ 0x712ae35b, profileId);
+    this.vehicleBlend = 0;
+    this.vehicleBlendLag = Math.exp(-1 / (rate * 0.080));
     this.setProfile(profileId);
   }
 
@@ -73,6 +77,7 @@ export class EngineSynthCore {
     if (!profile) throw new RangeError("Unsupported engine sound profile: " + profileId);
     this.profileId = profileId;
     this.profile = profile;
+    this.vehicleIce.setCylinderProfile(profileId);
     // The next ignition must be in the future; don't double-fire on a switch.
     let index = 0;
     while (index < profile.firingAngles.length &&
@@ -99,7 +104,7 @@ export class EngineSynthCore {
   next(targetRpm, targetLoad, targetThrottle, targetSpeed, targetActive = 1,
        targetCombustion = 1, targetMotor = 0, targetMotorRpm = 0,
        targetRegen = 0, targetGenerator = 0, targetGeneratorRpm = 0,
-       electricProfile = 0) {
+       electricProfile = 0, iceVehicle = 0, engineOperation = 2) {
     const rpm = clamp(targetRpm, 0, 8000, 850);
     const load = clamp(targetLoad, 0, 1);
     const throttle = clamp(targetThrottle, 0, 1);
@@ -168,8 +173,21 @@ export class EngineSynthCore {
     // and regen voices use their own shaft rates and independent amplitudes.
     const electricVoice = this.electric.next(targetMotor, targetMotorRpm,
       targetRegen, targetGenerator, targetGeneratorRpm, electricProfile);
-    const mix = (exhaust + intake + mechanical) * this.combustion +
-      rolling + electricVoice;
+    // Original generic ICE remains available. Prius/Aura use dedicated
+    // four-stroke, intake/exhaust and unfuelled-machinery synthesis.
+    // Vehicle changes crossfade over ~80ms rather than hard-switching audio.
+    const vehicleTarget = iceVehicle === 1 || iceVehicle === 2 ? 1 : 0;
+    this.vehicleBlend = this.vehicleBlend * this.vehicleBlendLag +
+      vehicleTarget * (1 - this.vehicleBlendLag);
+    let vehicleVoice = 0;
+    if (vehicleTarget || this.vehicleBlend > 0.0001) {
+      vehicleVoice = this.vehicleIce.next(this.rpm, this.load, this.throttle,
+        combustion, engineOperation, iceVehicle === 2 ? 2 : 1);
+    }
+    const oldIce = (exhaust + intake + mechanical) * this.combustion;
+    const iceMix = oldIce * (1 - this.vehicleBlend) +
+      vehicleVoice * this.vehicleBlend;
+    const mix = iceMix + rolling + electricVoice;
     // DC block + bounded saturation; no sample value leaves [-0.54, +0.54].
     this.hp = mix - this.prevMix + 0.995 * this.hp;
     this.prevMix = mix;
