@@ -11,12 +11,12 @@
   <link rel="icon" type="image/svg+xml" href="./icon.svg"/>
   <link rel="apple-touch-icon" href="./apple-touch-icon.png"/>
   <meta name="description" content="録音なしのリアルタイム合成エンジン音をスマホで操作するWebデモ"/>
-  <title>EngineSoundLab — P4 Mobile PWA</title>
+  <title>EngineSoundLab — P5-D Cabin Soundstage</title>
 </head>
 <body>
   <main class="app">
     <header class="topbar">
-      <div><small class="eyebrow">PROCEDURAL SOUND LAB / P4</small><h1>EngineSoundLab</h1></div>
+      <div><small class="eyebrow">PROCEDURAL SOUND LAB / P5-D</small><h1>EngineSoundLab</h1></div>
       <div class="status-cluster">
         <span class="status" id="status" role="status">停止中</span>
         <span class="offline-status" id="offline-status" role="status" aria-live="polite">PWAを確認中</span>
@@ -44,6 +44,23 @@
           <option value="i6">直列6気筒 I6</option>
         </select>
         <span>録音不要・音響モデルのみ切替</span>
+      </div>
+      <div class="cabin-settings">
+        <div class="control-group">
+          <label for="listener-mode">LISTENING POSITION</label>
+          <select id="listener-mode" aria-label="合成音の聴取位置">
+            <option value="CABIN" selected>車内（推定の遮音・走行音）</option>
+            <option value="ENGINE_BAY">エンジンルーム（比較用）</option>
+          </select>
+        </div>
+        <div class="control-group">
+          <label for="road-surface">ROAD SURFACE</label>
+          <select id="road-surface" aria-label="路面の粗さ">
+            <option value="0">滑らかな路面</option>
+            <option value="0.35" selected>標準の路面</option>
+            <option value="1">粗い路面</option>
+          </select>
+        </div>
       </div>
     </section>
     <section class="instrument" aria-label="メーター">
