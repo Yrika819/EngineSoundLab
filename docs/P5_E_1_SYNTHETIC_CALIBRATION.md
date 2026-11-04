@@ -15,7 +15,7 @@ microphone measurements, iPhone Safari/Pixel Chrome listening, and a measured
 100 ms end-to-end audio latency or a 10-minute physical-device thermal test.
 
 The WAVs are generated with the *exact* existing
-\`apps/web/public/synth-core.js\`, not different offline sound models. Original
+`apps/web/public/synth-core.js`, not different offline sound models. Original
 procedural synthesis is still the single required runtime audio backend. The
 new tools run only under Node.js/CI and do not add audio clips or recording
 assets to the deployed PWA.
@@ -81,7 +81,7 @@ RPMs are independent estimated values, not OEM gear equations.
 
 ## Measurements and acceptance gates
 
-\`npm run audio:qa\` renders 8 × 2 × 2 = **32 steady original WAV files**
+`npm run audio:qa` renders 8 × 2 × 2 = **32 steady original WAV files**
 plus 2 × 2 = **4 live EV→fuelled acceleration→regen→EV sequences**.
 Each WAV is mono, signed 16-bit PCM; the original browser's AudioWorklet
 copies the mono synthesis into its two stereo output channels.
@@ -105,15 +105,15 @@ used as purported manufacturer targets.
 
 Reproducibility / CI:
 
-\`\`\`bash
+```bash
 npm install
 npm run audio:qa
 # artifacts: test-results/p5e-audio/*.wav, measurements.json, README.md
 npm test
-\`\`\`
+```
 
-The \`acoustic-calibration-qa\` CI job uploads
-\`p5-e-acoustic-audition\` containing \`*.wav\` and \`measurements.json\`.
+The `acoustic-calibration-qa` CI job uploads
+`p5-e-acoustic-audition` containing `*.wav` and `measurements.json`.
 For listening, start at a low playback volume and compare the same events
 between Prius/Aura and 44.1/48 kHz. These generated tracks contain no
 copyrighted vehicle recordings.
