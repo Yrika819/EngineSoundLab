@@ -19,7 +19,7 @@ test("worklet registers and consumes UI parameter channels", () => {
   assert.equal(registeredName, "engine-synth-p1");
   assert.ok(Worklet);
   const descriptors = Worklet.parameterDescriptors;
-  for (const name of ["rpm", "load", "throttle", "speed", "combustion", "active", "motor", "motorRpm", "regen", "generator", "generatorRpm", "electricProfile", "iceProfile", "engineMotoring"]) {
+  for (const name of ["rpm", "load", "throttle", "speed", "combustion", "active", "motor", "motorRpm", "motorTorque", "regen", "generator", "generatorRpm", "generatorMotoring", "electricProfile", "iceProfile", "engineMotoring"]) {
     assert.ok(descriptors.some(param => param.name === name), "missing " + name);
   }
   const node = new Worklet();
@@ -33,9 +33,11 @@ test("worklet registers and consumes UI parameter channels", () => {
     active: Float32Array.of(1),
     motor: Float32Array.of(0.5),
     motorRpm: Float32Array.of(1800),
+    motorTorque: Float32Array.of(-0.7),
     regen: Float32Array.of(0.3),
     generator: Float32Array.of(0.4),
     generatorRpm: Float32Array.of(2600),
+    generatorMotoring: Float32Array.of(0.45),
     electricProfile: Float32Array.of(2),
     iceProfile: Float32Array.of(2),
     engineMotoring: Float32Array.of(0.2)
@@ -55,4 +57,27 @@ test("worklet can change I3/I4/I6 geometry without resetting the audio node", ()
   assert.equal(node.synth.profile.cylinders, 6);
   node.port.onmessage({ data: { type: "setProfile", profileId: "not-supported" } });
   assert.equal(node.synth.profileId, "i6");
+});
+
+
+test("P5-C: Worklet forwards signed torque and independent generator motoring",()=>{
+  const node=new Worklet({processorOptions:{profileId:"i4"}});
+  const output=[[new Float32Array(128),new Float32Array(128)]];
+  const params=Object.fromEntries(
+    Worklet.parameterDescriptors.map(p=>[p.name,Float32Array.of(p.defaultValue)]));
+  params.active=Float32Array.of(1);
+  params.motor=Float32Array.of(0.8);
+  params.motorRpm=Float32Array.of(2700);
+  params.motorTorque=Float32Array.of(-0.8);
+  params.generator=Float32Array.of(0);
+  params.generatorMotoring=Float32Array.of(0.8);
+  params.generatorRpm=Float32Array.of(1900);
+  params.electricProfile=Float32Array.of(1);
+  for(let i=0;i<100;i++)node.process([],output,params);
+  assert.ok(node.synth.electric.motorTorque<-0.1);
+  assert.ok(node.synth.electric.generatorMotoring>0.1);
+  assert.equal(node.synth.electric.generatorLevel,0);
+  assert.ok(Math.abs(node.synth.electric.lastMotoring)>0);
+  assert.equal(node.synth.electric.lastGenerator,0);
+  assert.deepEqual(output[0][0],output[0][1]);
 });

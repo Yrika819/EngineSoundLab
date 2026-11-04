@@ -82,9 +82,11 @@ export class EngineAudio {
       set("combustion", telemetry.combustionGate, 0.025);
       set("motor", telemetry.motorAmplitude, 0.03);
       set("motorRpm", telemetry.tractionShaftRpm, 0.035);
+      set("motorTorque", telemetry.motorTorqueNormalized, 0.035);
       set("regen", telemetry.regenAmplitude, 0.04);
       set("generator", telemetry.generatorAmplitude, 0.04);
       set("generatorRpm", telemetry.generatorShaftRpm, 0.04);
+      set("generatorMotoring", telemetry.generatorMotoringAmplitude, 0.035);
       set("electricProfile", telemetry.electricProfile, 0.075);
       set("iceProfile", telemetry.iceProfile, 0.090);
       set("engineMotoring", telemetry.engineMotoringAmplitude, 0.028);

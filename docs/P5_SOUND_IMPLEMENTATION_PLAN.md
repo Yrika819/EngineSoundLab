@@ -143,3 +143,10 @@
 PR #24 introduced the dedicated Prius/Aura combustion banks and nonfuelled engine motoring audio. An independently produced alternative P5-B PR (#25) was in progress when #24 merged and became conflicting. The alternative engine must **not** be merged over #24; it is superseded. Only complementary improvements are carried forward here: estimated cabin mid-band EQ, improved intake/throttle transient, and fuel-cut/no-false-ignition behavior. Vehicle source architecture, original P5-B tests, battery/drive models, PWA and electric synthesis remain intact.
 
 These changes improve the model's qualitative plausibility; they are not a substitute for P5-E listening and spectral comparison against matched real-car recordings.
+
+## P5-C electric machine slice implementation status
+
+- P5-C introduces independent sound lanes for traction magnetic order, reduction gear, approximate inverter carrier, regenerative braking, generator under electrical load and generator acting as an engine starter.
+- Vehicle sound bridge consumes signed traction torque and distinct generator-motoring demand from P5-A rather than assuming electrical generation is equivalent to rotation.
+- Qualitatively different Prius MG1/MG2 and Aura EM47/generator orders are based on physical topology, not unverified OEM numerical data. Aliasing suppression added for high-order tones at 8/44.1/48/96kHz.
+- P5-D cabin masking and P5-E matched-reference listening/phone measurements still remain. Exact inverter PWM maps, pole pairs and gear teeth must stay identified as estimates.
