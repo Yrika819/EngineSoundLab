@@ -58,6 +58,16 @@ test.describe("P6.1 real mobile browser visual matrix", () => {
             center:box(q(".aura-center-panel"))} : null};
       },{selector:variant.selector,width});
 
+      // Save every scenario before asserting, even when a layout fails,
+      // so CI provides an inspectable screenshot of the actual defect.
+      const name=variant.name+"-"+width+"px-"+scene.toLowerCase();
+      await mkdir(artifactDir,{recursive:true});
+      await skin.screenshot({path:path.join(artifactDir,name+".png"),animations:"disabled"});
+      await writeFile(path.join(artifactDir,name+".json"),JSON.stringify(metrics,null,2)+"\n");
+      if(width===320&&scene==="EV")
+        await page.screenshot({path:path.join(artifactDir,variant.name+"-full-page.png"),
+          fullPage:true,animations:"disabled"});
+
       expect(errors,"unhandled app errors").toEqual([]);
       expect(metrics.viewportWidth).toBe(width);
       expect(metrics.documentWidth,"horizontal viewport overflow").toBeLessThanOrEqual(width+1);
@@ -107,13 +117,7 @@ test.describe("P6.1 real mobile browser visual matrix", () => {
           .toHaveText(scene==="REGEN"?"CHARGE":scene==="ACCEL"?"POWER":"ECO");
       }
 
-      const name=variant.name+"-"+width+"px-"+scene.toLowerCase();
-      await mkdir(artifactDir,{recursive:true});
-      await skin.screenshot({path:path.join(artifactDir,name+".png"),animations:"disabled"});
-      await writeFile(path.join(artifactDir,name+".json"),JSON.stringify(metrics,null,2)+"\n");
-      if(width===320&&scene==="EV")
-        await page.screenshot({path:path.join(artifactDir,variant.name+"-full-page.png"),
-          fullPage:true,animations:"disabled"});
+
     });
   }
 
