@@ -46,6 +46,7 @@ test("all hashed app bundles and offline synthesis modules are precached",()=>{
   "./","./index.html","./manifest.webmanifest","./icon.svg",
   "./apple-touch-icon.png","./icon-192.png","./icon-512.png",
   "./engine-worklet.js","./synth-core.js","./electric-synth.js",
+  "./ice-acoustics.js",
   ...assets.map(a=>"./assets/"+a)
  ];
  for(const path of required){
