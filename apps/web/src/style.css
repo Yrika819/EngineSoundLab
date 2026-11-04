@@ -401,3 +401,132 @@ body{overscroll-behavior-x:none}
  .gauge-aura .aura-dial-sub{display:none}
  .gauge-aura.enhanced .aura-center-panel{border-inline:0}
 }
+
+
+/* P6.3 — source-specific energy lanes. The SVG has separate EV battery->motor,
+   regeneration motor->battery, and generator->motor paths; only telemetry
+   enables a lane, never an inferred ECU switching threshold. */
+.gauge-aura .aura-energy-route [data-route],
+.gauge-aura .aura-energy-route [data-arrow],
+.gauge-aura .aura-energy-route .energy-generator{
+ opacity:0;pointer-events:none;
+}
+.gauge-aura .aura-energy-route .energy-flow-lane{
+ fill:none;stroke:#83dbe0;stroke-width:3;stroke-linecap:round;
+ stroke-linejoin:round;stroke-dasharray:6 6;
+ animation:none;
+}
+.gauge-aura .aura-energy-route .energy-flow-head{
+ fill:none;stroke:#83dbe0;stroke-width:2.8;
+ stroke-linecap:round;stroke-linejoin:round;
+}
+.gauge-aura .aura-energy-route .energy-generator-box{
+ fill:#293442;stroke:#adf0d2;stroke-width:1.5;
+}
+.gauge-aura .aura-energy-route .energy-generator text{
+ fill:#d7ffec;font:bold 9px system-ui,sans-serif;
+}
+.gauge-aura[data-energy-flow="ev"][data-motor-drive="true"] [data-route="ev"],
+.gauge-aura[data-energy-flow="ev"][data-motor-drive="true"] [data-arrow="ev"]{
+ opacity:1;
+}
+.gauge-aura[data-energy-flow="regen"] [data-route="regen"],
+.gauge-aura[data-energy-flow="regen"] [data-arrow="regen"]{
+ opacity:1;stroke:#7dccf5;
+}
+.gauge-aura[data-energy-flow="generation"][data-motor-drive="true"] [data-route="generation"],
+.gauge-aura[data-energy-flow="generation"][data-motor-drive="true"] [data-arrow="generation"],
+.gauge-aura[data-energy-flow="generation"] .energy-generator{
+ opacity:1;
+}
+.gauge-aura[data-energy-flow="generation"][data-battery-charging="true"]
+ [data-route="charging"],
+.gauge-aura[data-energy-flow="generation"][data-battery-charging="true"]
+ [data-arrow="charging"]{
+ opacity:1;stroke:#91e8d6;
+}
+.gauge-aura[data-energy-flow="generation"] [data-route="generation"],
+.gauge-aura[data-energy-flow="generation"] [data-arrow="generation"]{
+ stroke:#adf0d2;
+}
+/* Animate only the source lane that is genuinely carrying power. */
+.gauge-aura[data-energy-flow="ev"] [data-route="ev"],
+.gauge-aura[data-energy-flow="regen"] [data-route="regen"],
+.gauge-aura[data-energy-flow="generation"] [data-route="generation"],
+.gauge-aura[data-energy-flow="generation"][data-battery-charging="true"]
+  [data-route="charging"]{
+ animation:esl-energy-stream .95s linear infinite;
+}
+.gauge-aura[data-energy-flow="regen"] [data-route="regen"],
+.gauge-aura[data-energy-flow="generation"][data-battery-charging="true"]
+  [data-route="charging"]{
+ animation-direction:reverse;
+}
+.gauge-aura[data-energy-flow="generation"] .energy-flow-lane{
+ animation-duration:.82s;
+}
+@keyframes esl-energy-stream{
+ from{stroke-dashoffset:0}
+ to{stroke-dashoffset:-24}
+}
+/* Prius power-split is *not* Aura e-POWER: the Prius status uses its own
+   compact mode-colored flow strip and HV arc. No fake generator-to-wheel map. */
+.gauge-prius .prius-flow-strip{
+ display:inline-flex;width:38px;height:5px;gap:3px;align-self:flex-start;
+ max-width:95%;margin-top:3px;
+}
+.gauge-prius .prius-flow-strip i{
+ display:block;flex:1;min-width:0;background:#79dccf;
+ border-radius:8px;opacity:.9;
+ animation:esl-flow-pulse .9s ease-in-out infinite alternate;
+}
+.gauge-prius .prius-flow-strip i:nth-child(2){animation-delay:.17s}
+.gauge-prius .prius-flow-strip i:nth-child(3){animation-delay:.34s}
+.gauge-prius[data-energy-flow="regen"] .prius-flow-strip i{
+ background:#78c7f1;animation-direction:alternate-reverse;
+}
+.gauge-prius[data-energy-flow="hybrid"] .prius-flow-strip i{
+ background:#e8c686;
+}
+.gauge-prius[data-energy-flow="spinning"] .prius-flow-strip i{
+ background:#8494aa;
+}
+@keyframes esl-flow-pulse{
+ from{opacity:.20;transform:scaleY(.58)}
+ to{opacity:.96;transform:scaleY(1)}
+}
+/* Motion preference applies to all decorative energy animations.
+   The exact speed, SOC and numeric power readouts remain instantly updated. */
+@media(prefers-reduced-motion:reduce){
+ /* De-animate, but do NOT reveal hidden/unauthorized energy paths. */
+ .gauge-aura .aura-energy-route .energy-flow-lane{
+  animation:none;transform:none;
+ }
+ .gauge-prius .prius-flow-strip i{
+  animation:none;opacity:1;transform:none;
+ }
+}
+
+
+/* A fuelled Aura engine with no generator output must never illuminate the
+   generator line. Electrical traction can still be battery-powered. */
+.gauge-aura[data-energy-flow="engine_on"][data-motor-drive="true"]
+ [data-route="ev"],
+.gauge-aura[data-energy-flow="engine_on"][data-motor-drive="true"]
+ [data-arrow="ev"],
+.gauge-aura[data-energy-flow="spinning"][data-motor-drive="true"]
+ [data-route="ev"],
+.gauge-aura[data-energy-flow="spinning"][data-motor-drive="true"]
+ [data-arrow="ev"]{opacity:1;stroke:#83dbe0}
+.gauge-aura[data-energy-flow="engine_on"][data-motor-drive="true"]
+ [data-route="ev"],
+.gauge-aura[data-energy-flow="spinning"][data-motor-drive="true"]
+ [data-route="ev"]{
+ animation:esl-energy-stream .95s linear infinite
+}
+@media(prefers-reduced-motion:reduce){
+ .gauge-aura[data-energy-flow="engine_on"] .energy-flow-lane,
+ .gauge-aura[data-energy-flow="spinning"] .energy-flow-lane{
+  animation:none
+ }
+}

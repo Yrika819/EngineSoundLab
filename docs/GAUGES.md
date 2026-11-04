@@ -64,3 +64,7 @@ See [P6.1 visual acceptance checks](P6_1_VISUAL_QA.md). **These are Chromium scr
 ## P6.2 — screenshot-led design review
 
 A real 39-image P6.1 screenshot audit motivated a peripheral-only Aura needle that no longer crosses POWER/SPEED digits, denser dial graduation, original instrument face depth and a vertical digit/unit hierarchy. Prius moves D outside the speed ring and shortens the cramped generating label. Aura Classic/Enhanced styling separates the center information priority; CHARGE reverses the schematic flow arrow. **All SVG artwork is original, not copied or manufacturer-calibrated.** Full design notes: [P6.2 meter refinement](P6_2_METER_DESIGN.md).
+
+## P6.3 — needle interpolation and true energy-flow lanes
+
+A bounded, frame-time-normalized animation now smooths Aura peripheral pointer/progress arcs and the Prius charge/power SVG ring; the digital readouts remain immediate telemetry, not interpolated. Separate vectors are activated according to simulated power sources: Aura battery->motor EV, generator->motor generation, motor->battery regen, and optional generator->battery charging. Prius uses distinct HEV/power-split and EV/regeneration cues rather than reusing the Aura series architecture. Noncombustion spin, negative regen power, and visibility/reduced-motion transitions have dedicated regression checks. See [design and QA](P6_3_GAUGE_MOTION_ENERGY.md).

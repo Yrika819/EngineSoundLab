@@ -1,6 +1,8 @@
 import { arcPath, auraPowerAngle, auraRingSvg, priusArcSvg,
   priusPowerArc, speedAngle } from "./gauge-graphics";
-import { makeGaugeSnapshot, type GaugeMode, type GaugeSnapshot } from "./gauges";
+import { gaugeEnergyMode, makeGaugeSnapshot, type GaugeMode,
+  type GaugeSnapshot } from "./gauges";
+import { GaugeSmoother } from "./gauge-motion";
 import type { DriveState, VehicleId } from "./powertrains";
 
 /**
@@ -41,6 +43,7 @@ export function createGaugePanel(dial: HTMLElement, energyPanel: HTMLElement) {
             <b data-field="prius-motor-kw">0.0 kW</b>
           </div>
           <span class="prius-flow-caption" data-field="prius-flow">バッテリー → モーター</span>
+          <span class="prius-flow-strip" aria-hidden="true"><i></i><i></i><i></i></span>
         </aside>
         <div class="prius-center-display" role="group" aria-label="速度とハイブリッドシステムインジケーター">
           ${priusArcSvg()}
@@ -86,14 +89,28 @@ export function createGaugePanel(dial: HTMLElement, energyPanel: HTMLElement) {
         <div class="aura-center-panel">
           <span class="aura-center-eyebrow">e-POWER</span>
           <strong data-field="aura-mode">EV DRIVE</strong>
-          <svg class="aura-energy-route" viewBox="0 0 132 55" aria-hidden="true">
+          <svg class="aura-energy-route" viewBox="0 0 132 55"
+               data-flow-diagram="series-epower" aria-hidden="true">
+            <!-- Left: battery. Right: traction motor. Top: independent generator. -->
             <rect x="8" y="15" width="33" height="24" rx="5" class="energy-device"/>
             <rect x="13" y="21" width="8" height="12" rx="1" class="energy-charge"/>
             <rect x="23" y="21" width="8" height="12" rx="1" class="energy-charge"/>
-            <path d="M45 27H87" class="energy-wire"/>
-            <path d="M79 20L88 27L79 34" class="energy-arrow"/>
             <circle cx="106" cy="27" r="14" class="energy-device"/>
-            <path d="M102 18V24L97 28L105 38V31L112 26L105 18V37" class="energy-machine"/>
+            <path d="M102 18V24L97 28L105 38V31L112 26L105 18V37"
+                  class="energy-machine"/>
+            <!-- Each route is mutually controlled by the telemetry-derived mode. -->
+            <path d="M45 27H87" class="energy-flow-lane" data-route="ev"/>
+            <path d="M87 27H45" class="energy-flow-lane" data-route="regen"/>
+            <path d="M66 17V27H87" class="energy-flow-lane" data-route="generation"/>
+            <path d="M66 17V27H45" class="energy-flow-lane" data-route="charging"/>
+            <path d="M80 20L88 27L80 34" class="energy-flow-head" data-arrow="ev"/>
+            <path d="M52 20L44 27L52 34" class="energy-flow-head" data-arrow="regen"/>
+            <path d="M80 20L88 27L80 34" class="energy-flow-head" data-arrow="generation"/>
+            <path d="M52 20L44 27L52 34" class="energy-flow-head" data-arrow="charging"/>
+            <g class="energy-generator">
+              <rect x="52" y="2" width="28" height="15" rx="4" class="energy-generator-box"/>
+              <text x="66" y="13" text-anchor="middle">GEN</text>
+            </g>
           </svg>
           <span class="aura-energy-caption" data-field="aura-flow">バッテリー → モーター</span>
           <div class="aura-battery-row">
@@ -168,27 +185,106 @@ export function createGaugePanel(dial: HTMLElement, energyPanel: HTMLElement) {
     const node = field(name);
     if (node.textContent !== value) node.textContent = value;
   };
+  // A single requestAnimationFrame paints all needles/level arcs between
+  // the 30Hz telemetry updates. Exact numeric values remain unfiltered.
+  const powerMotion = new GaugeSmoother(145, 0.06);
+  const speedMotion = new GaugeSmoother(165, 0.06);
+  const priusChargeMotion = new GaugeSmoother(165, 0.0008);
+  const priusDriveMotion = new GaugeSmoother(165, 0.0008);
+  const motions = [powerMotion, speedMotion, priusChargeMotion, priusDriveMotion];
+  let motionVehicle: VehicleId | null = null;
+  let motionFrame: number | null = null;
+  let previousFrameTime = 0;
+  const reducedMotion = () =>
+    window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  const stopMotionFrame = () => {
+    if (motionFrame !== null) cancelAnimationFrame(motionFrame);
+    motionFrame = null;
+    previousFrameTime = 0;
+  };
+
+  function paintMotion(): void {
+    if (!prius.hidden) {
+      livePriusArc.setAttribute("d",
+        priusPowerArc(priusChargeMotion.value, priusDriveMotion.value));
+    }
+    if (!aura.hidden) {
+      const powerAngle = powerMotion.value;
+      const speedPos = speedMotion.value;
+      powerNeedle.setAttribute("transform", `rotate(${powerAngle.toFixed(3)} 100 100)`);
+      speedNeedle.setAttribute("transform", `rotate(${speedPos.toFixed(3)} 100 100)`);
+      const neutral = -116;
+      livePowerArc.setAttribute("d", powerAngle < neutral - 0.08
+        ? arcPath(powerAngle, neutral, 76)
+        : powerAngle > neutral + 0.08
+          ? arcPath(neutral, powerAngle, 76) : "");
+      liveSpeedArc.setAttribute("d", speedPos > -131.92
+        ? arcPath(-132, speedPos, 76) : "");
+    }
+  }
+
+  function scheduleMotion(): void {
+    if (motionFrame !== null || document.hidden || reducedMotion() ||
+        (prius.hidden && aura.hidden) || motions.every(m => m.settled)) return;
+    motionFrame = requestAnimationFrame(now => {
+      motionFrame = null;
+      if (document.hidden || reducedMotion()) {
+        motions.forEach(m => m.snap());
+        paintMotion();
+        previousFrameTime = 0;
+        return;
+      }
+      const dt = previousFrameTime ? now - previousFrameTime : 16.67;
+      previousFrameTime = now;
+      motions.forEach(m => m.step(dt));
+      paintMotion();
+      if (motions.every(m => m.settled)) previousFrameTime = 0;
+      else scheduleMotion();
+    });
+  }
+
+  document.addEventListener("visibilitychange", () => {
+    if (!document.hidden) return;
+    stopMotionFrame();
+    motions.forEach(m => m.snap());
+    paintMotion();
+  });
+
   let current: DriveState | null = null;
 
   function onVehicleChange(id: VehicleId) {
+    if (motionVehicle !== id) {
+      // Model switches must not tween from the last model's unrelated scale.
+      motionVehicle = id;
+      stopMotionFrame();
+      motions.forEach(m => m.reset());
+    }
     enhanced.disabled = id !== "aura_fe13_epower";
     if (enhanced.disabled && style.value === "AURA_ENHANCED") style.value = "AUTO";
   }
 
-  function meterState(g: GaugeSnapshot): { mode: string; flow: string; detail: string } {
-    if (g.zone === "CHARGE") {
-      return { mode: "REGEN", flow: "回生 → バッテリー", detail: "回生充電" };
+  function meterState(g: GaugeSnapshot, id: VehicleId):
+    { mode: string; flow: string; detail: string } {
+    const flow = gaugeEnergyMode(g, id);
+    switch (flow) {
+      case "REGEN":
+        return { mode: "REGEN", flow: "車輪 → 回生 → バッテリー", detail: "回生充電" };
+      case "GENERATION":
+        return { mode: "GENERATING", flow: "エンジン → 発電機 → モーター",
+          detail: "e-POWER発電中" };
+      case "HYBRID":
+        return { mode: "HYBRID DRIVE", flow: "エンジン＋モーター → 車輪",
+          detail: "HEV駆動（動力分割式）" };
+      case "ENGINE_ON":
+        return { mode: "ENGINE ON", flow: "電池 → モーター（発電なし）",
+          detail: "エンジン稼働・発電なし" };
+      case "SPINNING":
+        return { mode: "SPINNING", flow: "燃焼なし回転", detail: "燃焼なし回転" };
+      default:
+        return { mode: "EV DRIVE", flow: "バッテリー → モーター",
+          detail: "EV走行" };
     }
-    if (g.engineRunning && g.generatorPowerKw > 0.1) {
-      return { mode: "GENERATING", flow: "エンジン → 発電", detail: "エンジン発電中" };
-    }
-    if (g.engineRunning) {
-      return { mode: "HYBRID DRIVE", flow: "エンジン＋モーター", detail: "ハイブリッド走行" };
-    }
-    if (g.engineRpm > 25) {
-      return { mode: "STARTING", flow: "エンジン回転中", detail: "燃焼なし回転" };
-    }
-    return { mode: "EV DRIVE", flow: "バッテリー → モーター", detail: "EV走行" };
   }
 
   function render(vehicle: DriveState) {
@@ -196,29 +292,39 @@ export function createGaugePanel(dial: HTMLElement, energyPanel: HTMLElement) {
     onVehicleChange(vehicle.vehicleId);
     const gauge = makeGaugeSnapshot(vehicle, style.value as GaugeMode);
     const isAura = gauge.layout === "AURA_CLASSIC" || gauge.layout === "AURA_ENHANCED";
+    const energyMode = gaugeEnergyMode(gauge, vehicle.vehicleId);
+    const instant = document.hidden || reducedMotion();
     dial.hidden = gauge.layout !== "SPORT";
     prius.hidden = gauge.layout !== "PRIUS";
     aura.hidden = !isAura;
     tech.hidden = gauge.layout !== "ENGINEERING";
     aura.classList.toggle("enhanced", gauge.layout === "AURA_ENHANCED");
-    aura.classList.toggle("regenerating", gauge.zone === "CHARGE");
-    aura.classList.toggle("generating", gauge.engineRunning && gauge.generatorPowerKw > 0.1);
+    aura.classList.toggle("regenerating", energyMode === "REGEN");
+    aura.classList.toggle("generating", energyMode === "GENERATION");
+    aura.dataset.energyFlow = energyMode.toLowerCase();
+    aura.dataset.batteryCharging = energyMode === "GENERATION" &&
+      gauge.batteryPowerKw < -0.1 ? "true" : "false";
+    aura.dataset.motorDrive = gauge.motorPowerKw > 0.1 ? "true" : "false";
+    aura.dataset.batteryDischarging = gauge.batteryPowerKw > 0.1 ? "true" : "false";
+    prius.dataset.energyFlow = energyMode.toLowerCase();
     aura.dataset.layout = gauge.layout;
     // Real-car-inspired displays are self-contained; ENGINEERING preserves
     // full raw telemetry and does not fabricate trip/range/temperature data.
     energyPanel.hidden = gauge.layout !== "SPORT" || vehicle.batterySoc === null;
 
     if (gauge.layout === "PRIUS") {
-      const state = meterState(gauge);
+      const state = meterState(gauge, vehicle.vehicleId);
       set("prius-engine", gauge.engineRunning ? "ENGINE ON" : "EV READY");
       // P6.2: short sidebar label on 320px; footer preserves the full state.
-      set("prius-drive", state.mode === "GENERATING" ? "GEN" : state.mode);
+      set("prius-drive", state.mode === "HYBRID DRIVE" ? "HEV" :
+        state.mode === "GENERATING" ? "GEN" : state.mode);
       field("prius-drive").setAttribute("aria-label", state.mode);
       // Tight left information column: the complete path is available to
       // assistive technology; concise visible text avoids orphaned kanji.
-      const displayFlow = state.mode === "GENERATING" ? "発電中"
+      const displayFlow = state.mode === "HYBRID DRIVE" ? "HEV駆動"
+        : state.mode === "GENERATING" ? "発電中"
         : state.mode === "REGEN" ? "回生充電"
-        : state.mode === "EV DRIVE" ? "電池 → モーター" : state.flow;
+        : state.mode === "EV DRIVE" ? "電池→駆動" : state.flow;
       set("prius-flow", displayFlow);
       field("prius-flow").setAttribute("aria-label", state.flow);
       set("prius-speed", String(gauge.speedKmh));
@@ -227,7 +333,8 @@ export function createGaugePanel(dial: HTMLElement, energyPanel: HTMLElement) {
       set("prius-ev", gauge.engineRunning ? "HEV" : "EV");
       set("prius-soc", gauge.socPct + "%");
       set("prius-zone", gauge.zone);
-      livePriusArc.setAttribute("d", priusPowerArc(gauge.chargeFraction, gauge.driveFraction));
+      priusChargeMotion.setTarget(gauge.chargeFraction, instant);
+      priusDriveMotion.setTarget(gauge.driveFraction, instant);
       livePriusArc.classList.toggle("charging", gauge.zone === "CHARGE");
       const level = Math.round((gauge.socPct ?? 0) / 20);
       Array.from(battery.children).forEach((child, index) => {
@@ -235,12 +342,12 @@ export function createGaugePanel(dial: HTMLElement, energyPanel: HTMLElement) {
       });
     }
     if (isAura) {
-      const state = meterState(gauge);
+      const state = meterState(gauge, vehicle.vehicleId);
       const power = gauge.zone === "CHARGE"
         ? -Math.round(gauge.chargeFraction * 100)
         : Math.round(gauge.driveFraction * 100);
-      const powerAngle = auraPowerAngle(power);
-      const speedPos = speedAngle(gauge.speedKmh);
+      powerMotion.setTarget(auraPowerAngle(power), instant);
+      speedMotion.setTarget(speedAngle(gauge.speedKmh), instant);
       set("aura-engine", gauge.engineRunning ? "ENGINE ON" : "EV");
       set("aura-mode", state.mode);
       set("aura-power", String(power));
@@ -254,15 +361,12 @@ export function createGaugePanel(dial: HTMLElement, energyPanel: HTMLElement) {
       field("aura-battery-bar").style.width = gauge.socPct + "%";
       powerDial.setAttribute("aria-valuenow", String(power));
       speedDial.setAttribute("aria-valuenow", String(gauge.speedKmh));
-      powerNeedle.setAttribute("transform", `rotate(${powerAngle} 100 100)`);
-      speedNeedle.setAttribute("transform", `rotate(${speedPos} 100 100)`);
-      livePowerArc.setAttribute("d", power < 0
-        ? arcPath(powerAngle, -116, 76)
-        : power > 0 ? arcPath(-116, powerAngle, 76) : "");
       livePowerArc.classList.toggle("charging", power < 0);
-      liveSpeedArc.setAttribute("d", speedPos > -131.9
-        ? arcPath(-132, speedPos, 76) : "");
     }
+    paintMotion();
+    if (prius.hidden && aura.hidden) stopMotionFrame();
+    else scheduleMotion();
+
     if (gauge.layout === "ENGINEERING") {
       const electric = gauge.socPct !== null;
       set("tech-speed", gauge.speedKmh + " km/h");
