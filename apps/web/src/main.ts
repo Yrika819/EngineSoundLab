@@ -122,9 +122,10 @@ function draw():void {
  energyPanel.hidden=!isHybrid;
  if(isHybrid){
   batterySoc.textContent=Math.round((vehicle.batterySoc??0)*100)+"%";
-  enginePhaseText.textContent=vehicle.enginePhase==="RUNNING"?"稼働中":
-    vehicle.enginePhase==="STARTING"?"始動中":
-    vehicle.enginePhase==="STOPPING"?"停止動作":"停止";
+  enginePhaseText.textContent=vehicle.engineOperation==="RUNNING_FUELLED"?"燃焼稼働中":
+    vehicle.engineOperation==="SPINNING_UNFUELLED"?"燃焼なし回転":
+    vehicle.engineOperation==="STARTING"?"始動中":
+    vehicle.engineOperation==="STOPPING"?"停止動作":"停止";
   motorPower.textContent=vehicle.motorPowerKw.toFixed(1)+" kW";
   generatorPower.textContent=vehicle.generatorPowerKw.toFixed(1)+" kW";
  }
