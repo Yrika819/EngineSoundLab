@@ -324,7 +324,7 @@ export function createGaugePanel(dial: HTMLElement, energyPanel: HTMLElement) {
       const displayFlow = state.mode === "HYBRID DRIVE" ? "HEV駆動"
         : state.mode === "GENERATING" ? "発電中"
         : state.mode === "REGEN" ? "回生充電"
-        : state.mode === "EV DRIVE" ? "電池 → モーター" : state.flow;
+        : state.mode === "EV DRIVE" ? "電池→駆動" : state.flow;
       set("prius-flow", displayFlow);
       field("prius-flow").setAttribute("aria-label", state.flow);
       set("prius-speed", String(gauge.speedKmh));
