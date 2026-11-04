@@ -147,9 +147,12 @@ export class ElectricDriveSynth {
     const carrier = this.carrierHz + 0.12 * Math.min(elecHz, this.peakLimit);
     this.pwmPhase = (this.pwmPhase + step *
       Math.min(carrier, this.peakLimit)) % (2 * Math.PI);
+    // Multiplying the carrier by motor orders creates carrier +/- poleHz
+    // sidebands. Fade that modulation before the UPPER sideband aliases.
     this.lastInverter = motorMotion * this.motorLevel * 0.008 *
       this.bandGain(carrier) * Math.sin(this.pwmPhase) *
-      (0.85 + 0.15 * Math.sin(this.electromagneticPhase));
+      (0.85 + 0.15 * this.bandGain(carrier + elecHz) *
+        Math.sin(this.electromagneticPhase));
     // Regeneration is tied to brake energy AND signed motor torque.
     // Its frequency follows the traction shaft even without combustion.
     const regenStrength = Math.max(this.regenLevel,
