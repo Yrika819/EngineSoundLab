@@ -54,3 +54,16 @@ The audio worklet has independent `combustion`, `motor` and `motorRpm` channels.
 Validation: `tests/hybrid-powertrains.test.ts`, `tests/hybrid-audio.test.mjs`, `tests/worklet-bridge.test.mjs`. See manufacturer overviews for the public drivetrain topology:
 - https://toyota.jp/prius/
 - https://www.nissan-global.com/JP/INNOVATION/TECHNOLOGY/ARCHIVE/E_POWER/
+
+
+## P5-A implementation: engine operation and battery flow integrity
+
+Source: `apps/web/src/powertrains.ts`. **All numeric control values are placeholders/estimates.**
+
+- `engineOperation` is separate from `rpm` and `combustionActive`: `STOPPED`, `STARTING`, `RUNNING_FUELLED`, `SPINNING_UNFUELLED`, `STOPPING`. `enginePhase` remains as a compatibility label for existing cockpit code.
+- **Aura prototype only:** sustained high-SOC braking above an illustrative vehicle-speed threshold may command `SPINNING_UNFUELLED`. Electric drive/regeneration can rotate its generator/ICE; `engineMotoringElectricalKw` is a positive electrical **consumer**, `generatorPowerKw=0`, `combustionActive=false`, and `engineMechanicalKw=0`. This is not an assertion of the exact FE13 ECU threshold.
+- Motor shaft torque is computed from wheel drive/regen force and estimated motor final-drive ratio. `tractionMotorTorqueNm` is signed: positive drive / negative regeneration.
+- Battery discharge/charge limits are applied **before** the battery SOC integration, including an energy-per-step cap. Generator output is capped by electric loads plus the charge limit. Regeneration above electric charge acceptance is replaced by friction braking; it is never counted twice.
+- Power accounting: `batteryPowerKw = motorElectricalKw + auxiliaryKw + engineMotoringElectricalKw - generatorPowerKw`. Auxiliary electric demand may be reduced if no energy is available. All terms use kW, SOC integration uses a usable-capacity **placeholder**.
+- Vehicle acceleration still uses a simplified fixed mass/drag and fixed-step longitudinal model. This P5-A change improves power bookkeeping but does **not** make it a validated Prius/Aura digital twin.
+- Regression: `tests/p5a-audio-state-energy.test.ts` covers lower/upper SOC, engine state, signed traction torque, battery equation and randomized 50s scenarios.
