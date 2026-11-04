@@ -194,12 +194,15 @@ export class VehicleCombustionSynth {
       // Tiny deterministic cylinder-to-cylinder variation; combustion
       // amplitude follows RPM/load, not raw throttle alone.
       const imbalance = [1.0, 0.974, 1.025, 0.982, 1.011, 0.968][i];
+      // The smoothed envelope controls onset, but a fuel-cut operation must
+      // prohibit NEW ignitions immediately. Existing pipe pressure is allowed
+      // to decay naturally to avoid a hard audio discontinuity.
       const energy = (0.37 + 0.57 * this.load + 0.06 * this.throttle) *
-        imbalance * this.combustion;
+        imbalance * this.combustion * (fuelled > 0 ? 1 : 0);
       this.fireFast += energy;
       this.fireBody += energy;
       this.fireSub += energy;
-      if (this.combustion > 0.12) this.firingEvents++;
+      if (fuelled > 0 && this.combustion > 0.12) this.firingEvents++;
       this.nextFiring++;
     }
 
