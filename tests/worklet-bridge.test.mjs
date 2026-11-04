@@ -19,7 +19,7 @@ test("worklet registers and consumes UI parameter channels", () => {
   assert.equal(registeredName, "engine-synth-p1");
   assert.ok(Worklet);
   const descriptors = Worklet.parameterDescriptors;
-  for (const name of ["rpm", "load", "throttle", "speed", "combustion", "active", "motor", "motorRpm", "regen", "generator", "generatorRpm", "electricProfile"]) {
+  for (const name of ["rpm", "load", "throttle", "speed", "combustion", "active", "motor", "motorRpm", "regen", "generator", "generatorRpm", "electricProfile", "iceProfile", "engineMotoring"]) {
     assert.ok(descriptors.some(param => param.name === name), "missing " + name);
   }
   const node = new Worklet();
@@ -36,7 +36,9 @@ test("worklet registers and consumes UI parameter channels", () => {
     regen: Float32Array.of(0.3),
     generator: Float32Array.of(0.4),
     generatorRpm: Float32Array.of(2600),
-    electricProfile: Float32Array.of(2)
+    electricProfile: Float32Array.of(2),
+    iceProfile: Float32Array.of(2),
+    engineMotoring: Float32Array.of(0.2)
   };
   assert.equal(node.process([], output, parameters), true);
   assert.ok(output[0][0].some(value => value !== 0), "silent worklet output");
