@@ -7,3 +7,7 @@ coverage/
 !.env.example
 *.log
 .DS_Store
+
+# Playwright Chromium runs and screenshots (uploaded as CI artifacts)
+playwright-report/
+test-results/
