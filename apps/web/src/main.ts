@@ -22,6 +22,7 @@ const soundProfile=el<HTMLSelectElement>("sound-profile");
 const vehicleProfile=el<HTMLSelectElement>("vehicle-profile");
 const listenerModeSelect=el<HTMLSelectElement>("listener-mode");
 const roadSurfaceSelect=el<HTMLSelectElement>("road-surface");
+const hybridBalanceSelect=el<HTMLSelectElement>("hybrid-balance");
 const energyPanel=el<HTMLElement>("energy-panel");
 const batterySoc=el<HTMLElement>("battery-soc");
 const enginePhaseText=el<HTMLElement>("engine-state");
@@ -48,6 +49,14 @@ listenerModeSelect.addEventListener("change",()=>{
  hint.textContent=mode==="CABIN"
   ?"車内での推定遮音・ロードノイズを再現しています。"
   :"エンジンルーム視点（比較用の合成音・実車録音ではありません）。";
+});
+hybridBalanceSelect.addEventListener("change",()=>{
+ const selected=Number(hybridBalanceSelect.value);
+ if(![-1,0,1].includes(selected))return;
+ audio?.setHybridBalance(selected);
+ hint.textContent=selected===1?"電動音を強調しています（比較用の音量調整）。"
+  :selected===-1?"エンジン音を強調しています（比較用の音量調整）。"
+  :"標準のハイブリッド音響バランスです。";
 });
 roadSurfaceSelect.addEventListener("change",()=>{
  const roughness=Number(roadSurfaceSelect.value);
@@ -114,6 +123,7 @@ vehicleProfile.addEventListener("change",()=>{
  clearPedals();
  vehicle=makeDriveState(id);
  gaugePanel.onVehicleChange(id);
+ hybridBalanceSelect.disabled=id==="generic_i4";
  accumulator=0;lastFrame=0;
  const profile=id==="aura_fe13_epower"?"i3":"i4";
  soundProfile.value=profile;
@@ -179,6 +189,7 @@ power.addEventListener("click",async()=>{
      audio.setProfile(soundProfile.value as EngineSoundProfile);
      audio.setListenerMode(listenerModeSelect.value==="ENGINE_BAY"?"ENGINE_BAY":"CABIN");
      audio.setRoadRoughness(Number(roadSurfaceSelect.value));
+     audio.setHybridBalance(Number(hybridBalanceSelect.value));
      await audio.start();
      // A slow AudioWorklet load must not start playback after app backgrounding.
      if(document.hidden){

@@ -109,3 +109,9 @@ CABIN (default) uses **estimated** source-specific gains and lowpass shielding; 
 The AudioWorklet receives `listenerMode` and `roadRoughness` after the existing P5-C channels. The engine, motoring, traction and generation buses remain independent, and the existing output limiter/compressor remain in place. The new `cabin-soundstage.js` joins the versioned PWA offline precache.
 
 Qualitative background: https://www2.nissan-global.com/EN/INNOVATION/TECHNOLOGY/ARCHIVE/E_POWER_GEN2/ and https://www.nissan-global.com/JP/INNOVATION/TECHNOLOGY/ARCHIVE/E_POWER_CONTROL/. The parameters are **not** OEM interior sound transfer measurements. See [P5-D design/QA](P5_D_CABIN_SOUNDSTAGE.md). Physical-phone listening tests remain outstanding.
+
+## P5-D.1: hybrid ICE/electric source balance repair
+
+User listening revealed that motor/generator tones were buried by exaggerated combustion gain. The exact P5-D renderer was compared at matched RPM/speed/load using separate source RMS channels, then the Prius/Aura cabin ICE/electric/generator gains were rebalanced. Typical simulated fuelled scenarios changed electric-source/ICE RMS ratio from about 0.04→0.28 (Prius) and 0.10→0.55 (Aura). These ratios are **source-code tests**, not real-car measured acoustics. The unpowered source lanes remain silent.
+
+The optional `electricFocus` WebAudio channel accepts -1 engine-forward, 0 balanced (default), +1 electric-forward, with smooth ~160ms transition inside `CabinSoundstage`. It is ignored for the generic ICE model. UI selection never modifies engine load, motor torque, battery energy, or combustion gate. All previous DSP/limiter/PWA controls remain active. [Detailed measurements and limitations](P5_D_1_HYBRID_SOUND_BALANCE.md).

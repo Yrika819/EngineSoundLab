@@ -20,15 +20,17 @@ export const SOUNDSTAGE_PRESETS = Object.freeze({
     tyreGain: 1.0, windGain: 1.0
   }),
   PRIUS: Object.freeze({
-    engineGain: 0.24, engineCutoffHz: 950,
-    motoringGain: 0.52, tractionGain: 0.80,
-    generatorGain: 0.48, electricCutoffHz: 3300,
+    // P5-D.1: estimated mix to keep MG2/MG1 audible with a fuelled ICE.
+    engineGain: 0.075, engineCutoffHz: 950,
+    motoringGain: 0.70, tractionGain: 1.72,
+    generatorGain: 1.08, electricCutoffHz: 4200,
     tyreGain: 0.90, windGain: 0.86
   }),
   AURA: Object.freeze({
-    engineGain: 0.25, engineCutoffHz: 1030,
-    motoringGain: 0.48, tractionGain: 0.84,
-    generatorGain: 0.43, electricCutoffHz: 3400,
+    // P5-D.1: estimated mix for the independent e-POWER electric drive.
+    engineGain: 0.090, engineCutoffHz: 1030,
+    motoringGain: 0.69, tractionGain: 1.68,
+    generatorGain: 1.10, electricCutoffHz: 4500,
     tyreGain: 0.85, windGain: 0.84
   })
 });
@@ -41,6 +43,7 @@ export class CabinSoundstage {
     this.seed = (seed >>> 0) || 1;
     this.profileLag = Math.exp(-1 / (rate * 0.16));
     this.modeLag = Math.exp(-1 / (rate * 0.12));
+    this.focusLag = Math.exp(-1 / (rate * 0.16));
     this.speedLag = Math.exp(-1 / (rate * 0.10));
     this.engineLow = 0;
     this.motoringLow = 0;
@@ -53,6 +56,7 @@ export class CabinSoundstage {
     this.speed = 0;
     this.roughness = 0.35;
     this.bayMix = 0;
+    this.hybridFocus = 0;
     this.engineGain = SOUNDSTAGE_PRESETS.GENERIC.engineGain;
     this.motoringGain = SOUNDSTAGE_PRESETS.GENERIC.motoringGain;
     this.tractionGain = SOUNDSTAGE_PRESETS.GENERIC.tractionGain;
@@ -90,10 +94,11 @@ export class CabinSoundstage {
    * @param {number} profileCode 0 generic, 1 Prius-inspired, 2 Aura-inspired
    * @param {number} listeningMode 0 CABIN, 1 ENGINE_BAY (creative preview)
    * @param {number} roadRoughness 0 smooth, 0.35 standard, 1 coarse
+   * @param {number} electricFocus -1 engine-forward, 0 balanced, 1 electric-forward
    */
   next(combustion = 0, engineMotoring = 0, traction = 0, generator = 0,
        speedTarget = 0, profileCode = 0, listeningMode = 0,
-       roadRoughness = 0.35) {
+       roadRoughness = 0.35, electricFocus = 0) {
     const preset = profileCode === 1 ? SOUNDSTAGE_PRESETS.PRIUS
       : profileCode === 2 ? SOUNDSTAGE_PRESETS.AURA
       : SOUNDSTAGE_PRESETS.GENERIC;
@@ -111,6 +116,17 @@ export class CabinSoundstage {
     this.bayMix += ((listeningMode >= 0.5 ? 1 : 0) - this.bayMix) * m;
     this.roughness += (clip(roadRoughness, 0, 1) - this.roughness) * m;
     this.speed += (clip(speedTarget, 0, 90) - this.speed) * (1 - this.speedLag);
+    // Focus is an audition-only mix control. It never changes drivetrain
+    // state or creates electrical audio from an unpowered generator.
+    const requestedFocus = profileCode === 1 || profileCode === 2
+      ? clip(electricFocus, -1, 1) : 0;
+    this.hybridFocus += (requestedFocus - this.hybridFocus) *
+      (1 - this.focusLag);
+    const moreElectric = Math.max(0, this.hybridFocus);
+    const moreEngine = Math.max(0, -this.hybridFocus);
+    const engineMix = 1 - 0.22 * moreElectric + 0.50 * moreEngine;
+    const tractionMix = 1 + 0.65 * moreElectric - 0.25 * moreEngine;
+    const generatorMix = 1 + 0.60 * moreElectric - 0.28 * moreEngine;
     const bay = this.bayMix;
 
     // Subtle low-pass acoustic shielding for cabin. In engine-bay mode,
@@ -165,10 +181,16 @@ export class CabinSoundstage {
 
     // Engine bay is a qualitative listening-perspective switch, NOT a
     // certified measured microphone position or outdoor noise propagation.
-    this.lastEngine = cabinEngine * (1 - bay) + ice * 1.10 * bay;
-    this.lastMotoring = cabinMotoring * (1 - bay) + machinery * 1.02 * bay;
-    this.lastTraction = cabinTraction * (1 - bay) + drive * 0.96 * bay;
-    this.lastGenerator = cabinGenerator * (1 - bay) + gen * 0.91 * bay;
+    // Bay preview should not overdrive the core limiter for hybrid ICE.
+    const bayEngine = profileCode === 0 ? 1.10 : 0.35;
+    this.lastEngine = (cabinEngine * (1 - bay) + ice * bayEngine * bay)
+      * engineMix;
+    this.lastMotoring = (cabinMotoring * (1 - bay) + machinery * 1.02 * bay)
+      * engineMix;
+    this.lastTraction = (cabinTraction * (1 - bay) + drive * 1.45 * bay)
+      * tractionMix;
+    this.lastGenerator = (cabinGenerator * (1 - bay) + gen * 1.72 * bay)
+      * generatorMix;
     this.lastTyre = tyreTexture * tyreEnvelope * (1 - 0.75 * bay);
     this.lastWind = windTexture * windEnvelope * (1 - 0.82 * bay);
 

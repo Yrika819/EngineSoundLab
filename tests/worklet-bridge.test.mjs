@@ -19,7 +19,7 @@ test("worklet registers and consumes UI parameter channels", () => {
   assert.equal(registeredName, "engine-synth-p1");
   assert.ok(Worklet);
   const descriptors = Worklet.parameterDescriptors;
-  for (const name of ["rpm", "load", "throttle", "speed", "combustion", "active", "motor", "motorRpm", "motorTorque", "regen", "generator", "generatorRpm", "generatorMotoring", "electricProfile", "iceProfile", "engineMotoring", "listenerMode", "roadRoughness"]) {
+  for (const name of ["rpm", "load", "throttle", "speed", "combustion", "active", "motor", "motorRpm", "motorTorque", "regen", "generator", "generatorRpm", "generatorMotoring", "electricProfile", "iceProfile", "engineMotoring", "listenerMode", "roadRoughness", "electricFocus"]) {
     assert.ok(descriptors.some(param => param.name === name), "missing " + name);
   }
   const node = new Worklet();
@@ -42,7 +42,8 @@ test("worklet registers and consumes UI parameter channels", () => {
     iceProfile: Float32Array.of(2),
     engineMotoring: Float32Array.of(0.2),
     listenerMode: Float32Array.of(0),
-    roadRoughness: Float32Array.of(0.35)
+    roadRoughness: Float32Array.of(0.35),
+    electricFocus: Float32Array.of(0)
   };
   assert.equal(node.process([], output, parameters), true);
   assert.ok(output[0][0].some(value => value !== 0), "silent worklet output");
@@ -119,5 +120,32 @@ test("P5-D: Worklet applies live cabin / engine-bay and rough-surface controls",
   assert.ok(node.synth.soundstage.bayMix>0.9);
   assert.ok(node.synth.soundstage.roughness>quietRoughness+0.6);
   assert.ok(peak>0 && peak<0.55);
+  assert.deepEqual(output[0][0],output[0][1]);
+});
+
+test("P5-D.1: Worklet updates hybrid sound balance without rebuilding synth",()=>{
+  const node=new Worklet({processorOptions:{profileId:"i3"}});
+  const output=[[new Float32Array(128),new Float32Array(128)]];
+  const p=Object.fromEntries(
+    Worklet.parameterDescriptors.map(item=>[item.name,Float32Array.of(item.defaultValue)]));
+  p.active=Float32Array.of(1);
+  p.iceProfile=Float32Array.of(2);
+  p.electricProfile=Float32Array.of(2);
+  p.combustion=Float32Array.of(1);
+  p.rpm=Float32Array.of(2200);
+  p.load=Float32Array.of(.6);
+  p.motor=Float32Array.of(.7);
+  p.motorRpm=Float32Array.of(3300);
+  p.generator=Float32Array.of(.4);
+  p.generatorRpm=Float32Array.of(2200);
+  p.electricFocus=Float32Array.of(1);
+  for(let i=0;i<200;i++) node.process([],output,p);
+  assert.ok(node.synth.soundstage.hybridFocus>0.9);
+  const previous=node.synth;
+  p.electricFocus=Float32Array.of(-1);
+  for(let i=0;i<200;i++)node.process([],output,p);
+  assert.equal(node.synth,previous,"switch must not re-create synth");
+  assert.ok(node.synth.soundstage.hybridFocus<-.85);
+  assert.ok(output[0][0].every(Number.isFinite));
   assert.deepEqual(output[0][0],output[0][1]);
 });
