@@ -128,3 +128,10 @@
 - Actual FE13 engine-drag threshold, available battery energy, gear ratio, motor maps and electric sound spectral gains are **not verified against OEM vehicle calibration**.
 - P5-B/C will refine combustion/non-combustion mechanical voices, traction & generator frequency profiles and cabin masking.
 - P5-A is a functional engineering-model hardening step, not completed real-world fidelity validation.
+
+## P5-B execution status — vehicle ICE sound
+
+- Implemented in PR #25: `vehicle-combustion.js` with independent four-stroke combustion, intake/exhaust resonances and non-fuelled rotating engine sound; Prius and Aura have separate estimated cabin voicings.
+- `engineOperation` and `iceVehicle` are discrete WebAudio parameters, with crossfading at the DSP level. Explicit fuel cut prevents any **new ignition event** while allowing exhaust decay.
+- PWA offline shell caches the new DSP module, and engine cadence, profile/operation transitions, and WebAudio bridge have regression tests.
+- **Remaining**: actual vehicle sound measurement/calibration and listener-specific cabin effects (P5-C/D/E). No real-car fidelity certification is claimed.

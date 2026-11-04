@@ -59,4 +59,14 @@ Reference drivetrain topology only:
 - Traction shaft RPM, signed shaft torque, signed traction power, regen electrical power, generator shaft RPM/output and electrically consumed unfuelled engine motoring power are exposed independently.
 - The exact P3+ normalized motor/regen/generator loudness values remain initially compatible. Redesigning their real-car spectral character is P5-B/P5-C; no manufacturer-calibrated PWM/order or equalizer values have been added.
 - The converter is deterministic, clamps invalid input values, and does not read DOM meter values. `CABIN` is the default future listening mode; cabinet/engine-bay acoustics are reserved for P5-D.
-- The existing P1 AudioWorklet's single combustion control remains; un-fuelled rotating machinery is **not** falsely passed through as fuelled combustion. Adding its mechanical voice is planned in P5-B.
+- The existing P1 AudioWorklet's combustion gate remains. Since P5-B, the new vehicle-specific ICE voice also synthesizes a low-level unfuelled crank/starter whirr without igniting fuel.
+
+## P5-B: separate vehicle-specific engine voices
+
+The original generic I3/I4/I6 synthesizer remains unchanged for the generic gasoline car. Prius 60 2.0 HEV and Aura FE13 1.2 e-POWER now crossfade into `apps/web/public/vehicle-combustion.js`, a physically motivated **original** real-time combustion model.
+
+It includes four-stroke cylinder timing, short/medium/long decaying pressure excitation, separate intake noise, two exhaust resonances per estimated car profile, crankshaft/valvetrain harmonic sound, low-level nonfuelled rotating machinery and fixed vehicle-specific cabin peaking equalizers. **No manufacturer pressure-waveform or cabin EQ measurement has been used.** The Prius mid-frequency attenuation is inspired by the qualitative development lecture, not a verified MXWH60 equalizer curve.
+
+New AudioWorklet parameters: `iceVehicle` (0 generic, 1 Prius, 2 Aura) and `engineOperation` (categorical: 0 stop, 1 starting, 2 fuelled, 3 unfuelled rotation, 4 stopping). The two discrete parameters are set directly (not smoothed as an enum) to avoid transient false ignition. The DSP still smooths audio amplitude, filter mix and transitions. New ignition pulses stop **immediately** on fuel cut while residual exhaust energy fades naturally. Worklet combustion defaults off until vehicle telemetry arrives.
+
+The PWA precaches `vehicle-combustion.js` so installed/offline mode can load the complete synthesizer. See [P5-B acoustic design](P5_B_COMBUSTION_ACOUSTICS.md) and `tests/p5b-vehicle-combustion.test.mjs`.
