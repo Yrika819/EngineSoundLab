@@ -21,6 +21,7 @@ test("production HTML is installable and has an offline readiness indicator",()=
  assert.match(html, /id="offline-status"/);
  assert.match(html, /id="listener-mode"/);
  assert.match(html, /id="road-surface"/);
+ assert.match(html, /id="hybrid-balance"/);
  assert.match(html, /<meta name="viewport"/);
  assert.match(html, /src="\.\/assets\//);
 });
