@@ -1,33 +1,54 @@
-# Gauge rendering — P3 original OEM-inspired skins
+# P6 — Prius 60 and Aura FE13 instrument-cluster redesign
 
-## Current browser view modes
-- `AUTO` (default): Prius => Prius-inspired horizontal digital speed + CHARGE/ECO/POWER; Aura => Nissan-inspired Classic (large power and speed rings); generic gasoline => SPORT.
-- `SPORT`: existing RPM-first generic dial for any vehicle.
-- `ENGINEERING`: numeric speed, engine RPM, traction motor RPM, SOC, battery power, motor power, generator power, regen power and energy flow, all sourced from the same `DriveState` as sound and physics.
-- `AURA_ENHANCED`: selectable **only** with Aura. Shrinks the power and speed rings and enlarges a central energy-flow view.
+**Status:** Original digital cluster artwork, based on the information hierarchy in public manufacturer manuals. Not a pixel-for-pixel reproduction, OEM software, or validated ECU instrument calibration.
 
-The descriptions "Prius-inspired" and "Aura-inspired" refer to general *information layout*, not manufacturer artwork or an exact clone of OEM gauges.
+## Reference study
+
+### Toyota Prius 60-series hybrid
+
+Official instrument manual:
+https://manual.toyota.jp/prius/3041/hev/ja_JP/contents/vhch02se010402.php
+
+Toyota's Prius driver display emphasizes a **large numerical vehicle speed**, gear position and **hybrid CHG / ECO / POWER indicator**, with a compact, wide panel and EV indicator. The exact proportions vary by model year and customization. In P6 we replace the old horizontal bar with an original segmented **arc around digital speed**, with green EV/READY accents and a simplified battery indicator. The power/charge scales are **simulation-only normalized estimates**.
+
+### Nissan Aura FE13 e-POWER
+
+Official Aura Classic/Enhanced modes:
+https://www.nissan.co.jp/OPTIONAL-PARTS/NAVIOM/NOTE_SPECIAL/AURA/2406/PG/guid-f51c68a2-d3bd-4a0f-b52b-1914736deba4.html
+
+Nissan defines:
+- **Classic** — large **POWER on the left / speed on the right** dials with a center information area.
+- **Enhanced** — smaller left/right analog-style dials and a wider central advanced-drive information panel.
+
+In P6 we implement **three explicitly sized CSS grid columns** for both modes, at every narrow-screen breakpoint. No full-span center tile can push the right dial into a new row, fixing the previously reported vertical stacking. Original SVG vector art provides independently graduated rings, a moving needle, luminous current-power arc, battery/energy-flow diagram and speed readout. Enhanced changes only the relative column widths and central prominence, not drivetrain physics.
+
+Official Nissan power meter:
+https://www.nissan.co.jp/OPTIONAL-PARTS/NAVIOM/NOTE_SPECIAL/AURA/2508/PG/guid-1b4d26bb-0d44-402c-b7bf-392116876251.html
 
 ## Implementation
-- `apps/web/src/gauges.ts`: pure display adapter and regression tests, no DOM or side effects. It maps `DriveState` into immutable view values. Meter presentation **never** feeds back to vehicle physics or audio.
-- `apps/web/src/gauge-ui.ts`: creates the meter mode selector and responsive original DOM skins, updates labels, and hides alternate layouts.
-- `apps/web/src/style.css`: touch-friendly, portrait/landscape responsive layout and visual presentation.
-- `tests/gauge-layouts.test.ts`: selection rules, EV/charge/power zones, energy flow distinction, telemetry consistency, finite data.
 
-## Data accuracy
-- Toyota's hybrid indicator distinguishes CHARGE, ECO, POWER and engine-independent EV information. This project's display segments are **estimated approximations**, not OEM thresholds.
-- Nissan Aura Classic uses a power gauge on the left and a speed gauge on the right. Enhanced makes a central information area more prominent. Our energy-flow labels and ring artwork are independent and not identical to Nissan production UI.
-- We normalize regen power against an illustrative 28 kW display range and propulsion against 85 or 100 kW depending on prototype. These are visualization scales, **not measured calibrated vehicle maximum power**.
-- The energy monitor derives from `regenPowerKw`, `motorPowerKw`, `generatorPowerKw`, `engineMechanicalKw`, and `combustionActive`. For Prius, an approximate generator input is subtracted before showing engine wheel contribution.
-- The code does not fabricate odometer, fuel tank status, trip efficiency or temperature. Unknown data is not shown.
-- Manufacturer graphics, logos and fonts are NOT included.
+- `apps/web/src/gauge-graphics.ts` — **pure SVG geometry**: clockwise meter arcs, polar coordinates, 200×200 tick marks, CHARGE-to-POWER geometry, non-finite input clipping, independent speed and power needles.
+- `apps/web/src/gauge-ui.ts` — static original SVG/HTML cluster templates, cached field references for updates, no external artwork/screenshot/font, 30fps data updates under `main.ts`. Grid order: POWER / ENERGY CENTER / SPEED.
+- `apps/web/src/style.css` — black-glass Aura cluster with original white tick rings and subtle red power glow; dark-teal Prius cluster with bright CHG/ECO/PWR arc and central digital speed. The design is CSS-grid responsive on 320px+ phone viewports, and smaller enhanced mode keeps left/right dials on the same row.
+- `apps/web/src/gauges.ts` — unchanged deterministic view mapping: combustion/regen/SOC/power/speed derived exclusively from `DriveState`. No DOM values feed back to simulation/audio.
+- `tests/p6-gauge-vector.test.ts` — angle/arc/needle/regen tests, SVG structure and non-stacking CSS contract. Existing `tests/gauge-layouts.test.ts` remains.
 
-## Primary official sources
-- Toyota Prius meter/manual: https://manual.toyota.jp/prius/3041/hev/ja_JP/contents/vhch02se010402.php
-- Nissan Aura meter Classic vs Enhanced: https://www.nissan.co.jp/OPTIONAL-PARTS/NAVIOM/NOTE_SPECIAL/AURA/2406/PG/guid-f51c68a2-d3bd-4a0f-b52b-1914736deba4.html
-- Nissan Aura power meter behavior: https://www.nissan.co.jp/OPTIONAL-PARTS/NAVIOM/NOTE_SPECIAL/AURA/2508/PG/guid-1b4d26bb-0d44-402c-b7bf-392116876251.html
+## Visible fields
 
-## Remaining work
-- User-device visual QA for small screens and orientation changes.
-- Gauge runtime smoke in browsers; current automated tests are pure telemetry plus production build.
-- Detailed manufacturer-specific instrument animation and validated power curves belong to later releases.
+| Display | Prius | Aura Classic | Aura Enhanced |
+| --- | --- | --- | --- |
+| Vehicle speed | large central digital | right circular ring | smaller right circular ring |
+| Hybrid load and regen | CHG/ECO/PWR arcs | left POWER/regen ring | smaller left ring |
+| Electric mode/engine operation | HEV/EV tag, source status | center state | larger center state |
+| SOC | percentage + five-segment indicator | percentage + battery line | percentage + battery line |
+| Electric power and generation | motor kW / energy direction | central approximate motor/generator kW | central approximate motor/generator kW |
+| Unsupported data | no fabricated odometer, fuel level, temperature, range or ADAS | likewise | likewise |
+
+The drivetrain-to-power-gauge mapping remains illustrative, not factory-calibrated. The Aura power 0–100% and speed 0–180km/h rings are design scales, not promises about simulated performance. Refer to `README.md` and `docs/POWERTRAINS.md` for model limitations.
+
+## Quality gates and limitations
+
+- `npm run check` (TypeScript, physics/audio/UI tests, production Vite build, offline PWA test), and successful deployment on the main SHA.
+- PWA must contain the same compiled template and CSS as the accepted branch.
+- Small-screen and wide-screen live visual QA is still necessary: static tests can ensure three equal layout columns but cannot prove phone-specific browser rasterization. Note unverified physical-device rendering explicitly until screenshots/inspection are available.
+- **No direct OEM illustration, font, copyrighted screenshot, or proprietary icons are embedded in the published app.** Screenshots and manufacturer manuals were research references only.
