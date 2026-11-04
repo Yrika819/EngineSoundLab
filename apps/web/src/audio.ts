@@ -14,6 +14,7 @@ export class EngineAudio {
   private profile: EngineSoundProfile = "i4";
   private listenerMode: AudioListenerMode = "CABIN";
   private roadRoughness = 0.35;
+  private hybridBalance = 0;
   simplified = false;
 
   /** Changes only the sound profile; the generic driving physics is shared. */
@@ -35,6 +36,13 @@ export class EngineAudio {
     if (!Number.isFinite(roughness) || roughness < 0 || roughness > 1)
       throw new RangeError("Invalid road roughness");
     this.roadRoughness = roughness;
+  }
+
+  /** Audition-only acoustic balance; does not change motor/engine physics. */
+  setHybridBalance(balance: number): void {
+    if (!Number.isFinite(balance) || balance < -1 || balance > 1)
+      throw new RangeError("Hybrid mix balance must be -1 to 1");
+    this.hybridBalance = balance;
   }
 
   async start(): Promise<void> {
@@ -110,6 +118,7 @@ export class EngineAudio {
       this.worklet.parameters.get("listenerMode")?.setValueAtTime(
         telemetry.listenerMode === "ENGINE_BAY" ? 1 : 0, now);
       set("roadRoughness", this.roadRoughness, 0.10);
+      set("electricFocus", this.hybridBalance, 0.09);
     } else {
       const cylinders = this.profile === "i3" ? 3 : this.profile === "i6" ? 6 : 4;
       const hz = telemetry.combustionGate
