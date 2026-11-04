@@ -1,4 +1,5 @@
 import { ElectricDriveSynth } from "./electric-synth.js";
+import { VehicleIceAcoustics } from "./ice-acoustics.js";
 
 /**
  * EngineSoundLab original procedural audio DSP, P1 slice.
@@ -64,6 +65,7 @@ export class EngineSynthCore {
     this.resAGain = 1 - aRadius;
     this.resBGain = 1 - bRadius;
     this.electric = new ElectricDriveSynth(rate);
+    this.iceAcoustics = new VehicleIceAcoustics(rate);
     this.setProfile(profileId);
   }
 
@@ -99,7 +101,7 @@ export class EngineSynthCore {
   next(targetRpm, targetLoad, targetThrottle, targetSpeed, targetActive = 1,
        targetCombustion = 1, targetMotor = 0, targetMotorRpm = 0,
        targetRegen = 0, targetGenerator = 0, targetGeneratorRpm = 0,
-       electricProfile = 0) {
+       electricProfile = 0, iceProfile = 0, engineMotoring = 0) {
     const rpm = clamp(targetRpm, 0, 8000, 850);
     const load = clamp(targetLoad, 0, 1);
     const throttle = clamp(targetThrottle, 0, 1);
@@ -168,7 +170,15 @@ export class EngineSynthCore {
     // and regen voices use their own shaft rates and independent amplitudes.
     const electricVoice = this.electric.next(targetMotor, targetMotorRpm,
       targetRegen, targetGenerator, targetGeneratorRpm, electricProfile);
-    const mix = (exhaust + intake + mechanical) * this.combustion +
+    // P5-B: independent vehicle-specific ICE timbre and engine-motoring
+    // voice. A rotating but unfuelled engine does not ignite fuel/exhaust.
+    this.iceAcoustics.next(pressure, crankRadians, this.rpm, this.load,
+      this.throttle, white, this.combustion, engineMotoring, iceProfile);
+    const genericFuelledVoice = (exhaust + intake + mechanical) * this.combustion;
+    const combustionVoice =
+      genericFuelledVoice * this.iceAcoustics.genericBlend +
+      this.iceAcoustics.combustionVoice;
+    const mix = combustionVoice + this.iceAcoustics.motoringVoice +
       rolling + electricVoice;
     // DC block + bounded saturation; no sample value leaves [-0.54, +0.54].
     this.hp = mix - this.prevMix + 0.995 * this.hp;
