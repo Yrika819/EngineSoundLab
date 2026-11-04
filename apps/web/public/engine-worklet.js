@@ -11,7 +11,7 @@ class EngineWorklet extends AudioWorkletProcessor {
       { name: "load", defaultValue: 0, minValue: 0, maxValue: 1, automationRate: "k-rate" },
       { name: "throttle", defaultValue: 0, minValue: 0, maxValue: 1, automationRate: "k-rate" },
       { name: "speed", defaultValue: 0, minValue: 0, maxValue: 90, automationRate: "k-rate" },
-      { name: "combustion", defaultValue: 1, minValue: 0, maxValue: 1, automationRate: "k-rate" },
+      { name: "combustion", defaultValue: 0, minValue: 0, maxValue: 1, automationRate: "k-rate" },
       { name: "motor", defaultValue: 0, minValue: 0, maxValue: 1, automationRate: "k-rate" },
       { name: "motorRpm", defaultValue: 0, minValue: 0, maxValue: 20000, automationRate: "k-rate" },
       { name: "regen", defaultValue: 0, minValue: 0, maxValue: 1, automationRate: "k-rate" },
