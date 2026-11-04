@@ -189,7 +189,7 @@ export class CabinSoundstage {
       * engineMix;
     this.lastTraction = (cabinTraction * (1 - bay) + drive * 1.45 * bay)
       * tractionMix;
-    this.lastGenerator = (cabinGenerator * (1 - bay) + gen * 1.16 * bay)
+    this.lastGenerator = (cabinGenerator * (1 - bay) + gen * 1.72 * bay)
       * generatorMix;
     this.lastTyre = tyreTexture * tyreEnvelope * (1 - 0.75 * bay);
     this.lastWind = windTexture * windEnvelope * (1 - 0.82 * bay);
