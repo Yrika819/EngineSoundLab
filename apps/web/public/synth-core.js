@@ -126,11 +126,15 @@ export class EngineSynthCore {
     if (this.nextFiring < this.profile.firingAngles.length &&
         this.crankAngle >= this.profile.firingAngles[this.nextFiring]) {
       // Slight per-cylinder amplitude differences keep the sequence alive.
+      // Smooth the first firing when fuel is enabled, but stop creating
+      // NEW ignition impulses the instant fuel is cut. Already excited
+      // exhaust resonances decay naturally instead of being hard-muted.
       const strength = (0.42 + 0.38 * this.load + 0.20 * this.throttle) *
-        this.profile.amplitudes[this.nextFiring] * this.profile.pulseGain * this.combustion;
+        this.profile.amplitudes[this.nextFiring] * this.profile.pulseGain *
+        this.combustion * (combustion > 0 ? 1 : 0);
       this.fastPulse += strength;
       this.slowPulse += strength;
-      this.firingEvents++;
+      if (combustion > 0 && this.combustion > 0.12) this.firingEvents++;
       this.nextFiring++;
     }
 

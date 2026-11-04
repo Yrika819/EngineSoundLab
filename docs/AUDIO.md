@@ -80,3 +80,13 @@ Manufacturer background:
 - https://www2.nissan-global.com/EN/INNOVATION/TECHNOLOGY/ARCHIVE/E_POWER_GEN2/ — second generation e-POWER road-noise masking.
 - https://car.watch.impress.co.jp/docs/event_repo/2023aee/1503945.html — Prius engineer interview on sound shaping (reported speech, not measured transfer function).
 - https://manual.toyota.jp/prius/ — hybrid engine/EV operating states.
+
+## P5-B.1 estimated cabin equalization and fuel cut
+
+The existing P5-B `ice-acoustics.js` remains the only vehicle-specific ICE source; the conflicting parallel alternate prototype is NOT combined into a second active engine. Each car's combustion voice now has a stable peaking biquad with coefficients set once at construction. The initial **estimated** mid-band presets are Prius 365Hz/-4.8dB (Q 0.78) and Aura 365Hz/-1.5dB (Q 0.98). This is a qualitative development direction based on reported Prius low-frequency emphasis, not a measured Toyota transfer function. The intake transient envelope lasts about 85ms instead of 7ms.
+
+Raw fuel-off now prohibits any new firing impulse immediately, even while the combustion output and duct resonance are smoothing toward silence. This avoids ghost ignitions during the first moments after fuel cut. The AudioWorklet combustion default is now **0** until vehicle telemetry explicitly requests a fuelled engine, avoiding an unwanted starter blast when the app begins in EV mode.
+
+New tests verify 365Hz and 90Hz steady-state filter transfer, distinct Prius/Aura mid-band gains, 44.1/48/96kHz filter stability, no new fuel-cut ignition pulses, and bounded output during transitions. Browser and PWA functionality stay unchanged. User listening comparisons with real cabin recordings are still pending.
+
+Reference: https://car.watch.impress.co.jp/docs/event_repo/2023aee/1503945.html and https://www.nissan-global.com/JP/INNOVATION/TECHNOLOGY/ARCHIVE/HR12DE/.

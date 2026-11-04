@@ -17,7 +17,8 @@ export const ICE_TONE_PROFILES = Object.freeze({
     lowBody: 0.93, resonantBody: 0.40, shellBody: 0.12,
     edgeRasp: 0.095, intakeGain: 0.086, mechanicalGain: 0.030,
     crankOrder: 2, crankSubOrder: 1, subOrderGain: 0.28,
-    cabinLowWeight: 0.95
+    cabinLowWeight: 0.95,
+    cabinNotchHz: 365, cabinNotchDb: -4.8, cabinNotchQ: 0.78
   }),
   AURA: Object.freeze({
     id: 2, label: "Aura HR12DE I3 (estimated)",
@@ -25,7 +26,8 @@ export const ICE_TONE_PROFILES = Object.freeze({
     lowBody: 0.66, resonantBody: 0.34, shellBody: 0.17,
     edgeRasp: 0.055, intakeGain: 0.064, mechanicalGain: 0.016,
     crankOrder: 1.5, crankSubOrder: 1, subOrderGain: 0.10,
-    cabinLowWeight: 0.76
+    cabinLowWeight: 0.76,
+    cabinNotchHz: 365, cabinNotchDb: -1.5, cabinNotchQ: 0.98
   })
 });
 
@@ -49,6 +51,36 @@ class TunedResonator {
   }
 }
 
+/**
+ * Fixed biquad peaking/notch equalizer (RBJ cookbook coefficients).
+ * Coefficients calculated at construction; no per-sample allocations or
+ * filter rebuilding during a live vehicle change. The approximate Prius
+ * notch is a TUNING CHOICE, not a measured Toyota transmission path.
+ */
+export class CabinEqualizer {
+  constructor(rate, frequency, gainDb, q) {
+    if (!Number.isFinite(rate) || rate < 8000 || rate > 192000)
+      throw new RangeError("invalid sample rate");
+    const a = Math.pow(10, gainDb / 40);
+    const w = 2 * Math.PI * frequency / rate;
+    const alpha = Math.sin(w) / (2 * q);
+    const norm = 1 / (1 + alpha / a);
+    this.b0 = (1 + alpha * a) * norm;
+    this.b1 = -2 * Math.cos(w) * norm;
+    this.b2 = (1 - alpha * a) * norm;
+    this.a1 = -2 * Math.cos(w) * norm;
+    this.a2 = (1 - alpha / a) * norm;
+    this.x1 = this.x2 = this.y1 = this.y2 = 0;
+  }
+  process(x) {
+    const value = this.b0 * x + this.b1 * this.x1 +
+      this.b2 * this.x2 - this.a1 * this.y1 - this.a2 * this.y2;
+    this.x2 = this.x1; this.x1 = x;
+    this.y2 = this.y1; this.y1 = value;
+    return value;
+  }
+}
+
 class VehicleCombustionVoice {
   constructor(rate, config) {
     this.rate = rate;
@@ -61,6 +93,9 @@ class VehicleCombustionVoice {
     this.heat = 0;
     this.previousThrottle = 0;
     this.transient = 0;
+    this.surgeDecay = Math.exp(-1 / (rate * 0.085));
+    this.cabinEq = new CabinEqualizer(rate, config.cabinNotchHz,
+      config.cabinNotchDb, config.cabinNotchQ);
   }
 
   next(pressure, crankRadians, rpm, load, throttle, randomAir) {
@@ -87,7 +122,9 @@ class VehicleCombustionVoice {
     // square-wave pitch/gain discontinuities at sound profile transitions.
     const surge = Math.max(0, throttle - this.previousThrottle);
     this.previousThrottle = throttle;
-    this.transient = this.transient * 0.997 + surge * 0.025;
+    // ~85ms of breathing response instead of an inaudible ~7ms flicker.
+    this.transient = Math.min(1.2, this.transient * this.surgeDecay +
+      surge * 0.9);
     const loadGain = 0.30 + 0.68 * load + 0.13 * this.transient;
     const pressureBody = this.low * c.lowBody +
       firstTube * c.resonantBody + shell * c.shellBody;
@@ -98,8 +135,9 @@ class VehicleCombustionVoice {
        c.subOrderGain * Math.sin(crankRadians * c.crankSubOrder + 0.24));
     // A car's actual cabin transfer function is unknown; these damping
     // coefficients give Prius a deeper and Aura a more muted I3 profile.
-    return pressureBody * loadGain * c.cabinLowWeight +
+    const dry = pressureBody * loadGain * c.cabinLowWeight +
       noisyEdge + intake + mechanical;
+    return this.cabinEq.process(dry);
   }
 }
 
