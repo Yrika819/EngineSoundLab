@@ -177,12 +177,18 @@ test.describe("P6.1 real mobile browser visual matrix", () => {
       const skin=page.locator(id==="aura_fe13_epower"?".gauge-aura":".gauge-prius");
       const circle=id==="aura_fe13_epower";
       const needle=skin.locator('[data-needle="speed"]');
-      const initial=circle?await needle.getAttribute("transform"):
-        await skin.locator('[data-ring="prius"]').getAttribute("d");
-      await update("ACCEL");
-      const immediate=circle?await needle.getAttribute("transform"):
-        await skin.locator('[data-ring="prius"]').getAttribute("d");
-      // One telemetry frame cannot jump instantaneously to the new target.
+      // Read both sides of the state switch within ONE browser task so
+      // requestAnimationFrame cannot race between two Playwright roundtrips.
+      const {initial,immediate}=await page.evaluate(([car,selector])=>{
+        const node=document.querySelector(selector);
+        const attr=car==="aura_fe13_epower"?"transform":"d";
+        const before=node.getAttribute(attr);
+        window.__ESL_VISUAL_QA__(car,"ACCEL");
+        return {initial:before,immediate:node.getAttribute(attr)};
+      },[id,circle?'.gauge-aura [data-needle="speed"]':
+          '.gauge-prius [data-ring="prius"]']);
+      // A telemetry update changes the exact numeric readout instantly,
+      // but the SVG geometry must not jump before a new animation frame.
       expect(immediate).toBe(initial);
       if(circle){
         await expect(skin).toHaveAttribute("data-energy-flow","generation");
