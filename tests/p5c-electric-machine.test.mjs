@@ -24,7 +24,7 @@ test("P5-C: silent vehicle has no motor/gear/inverter/generator leakage",()=>{
   const x=render({motor:0,regen:0,generator:0,motoring:0});
   assert.equal(x.peak,0);
   for(const key of ["lastTraction","lastGear","lastInverter","lastRegen",
-    "lastGenerator","lastMotoring"])assert.equal(x.dsp[key],0,key);
+    "lastGenerator","lastMotoring"])assert.ok(x.dsp[key] === 0, key + " should be silent (accept +0/-0)");
 });
 test("P5-C: EV traction produces distinct motor, reduction gear and inverter orders",()=>{
   const x=render({motor:0.85,profile:1,torque:0.65});
@@ -32,15 +32,15 @@ test("P5-C: EV traction produces distinct motor, reduction gear and inverter ord
   assert.ok(Math.abs(x.dsp.lastTraction)>1e-6);
   assert.ok(Math.abs(x.dsp.lastGear)>1e-6);
   assert.ok(Math.abs(x.dsp.lastInverter)>1e-7);
-  assert.equal(x.dsp.lastGenerator,0);
-  assert.equal(x.dsp.lastMotoring,0);
+  assert.ok(x.dsp.lastGenerator === 0);
+  assert.ok(x.dsp.lastMotoring === 0);
 });
 test("P5-C: motor regen tone changes with negative torque even at equal RPM",()=>{
   const forward=render({motor:0.75,torque:0.7,regen:0,profile:2});
   const braking=render({motor:0.75,torque:-0.7,regen:0.75,profile:2});
   assert.ok(forward.rms>0.01 && braking.rms>0.01);
   assert.notDeepEqual(forward.samples,braking.samples);
-  assert.equal(forward.dsp.lastRegen,0);
+  assert.ok(forward.dsp.lastRegen === 0);
   assert.ok(Math.abs(braking.dsp.lastRegen)>1e-6);
 });
 test("P5-C: MG1/e-POWER generator and starter run without traction or combustion",()=>{
@@ -48,8 +48,8 @@ test("P5-C: MG1/e-POWER generator and starter run without traction or combustion
   const start=render({motor:0,generator:0,motoring:0.9,profile:1});
   assert.ok(g.rms>0.005);
   assert.ok(start.rms>0.005);
-  assert.equal(g.dsp.lastMotoring,0);
-  assert.equal(start.dsp.lastGenerator,0);
+  assert.ok(g.dsp.lastMotoring === 0);
+  assert.ok(start.dsp.lastGenerator === 0);
   assert.ok(Math.abs(g.dsp.lastGenerator)>1e-6);
   assert.ok(Math.abs(start.dsp.lastMotoring)>1e-6);
   assert.notDeepEqual(g.samples,start.samples);
