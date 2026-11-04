@@ -22,3 +22,6 @@ P5-C acoustic slice: electric traction/generator/starter/regen source separation
 
 
 P5-D cabin acoustics: source-separated fuelled engine, unfuelled machinery, traction, generator, tyre and wind, plus two estimated listening positions and a road-surface setting. DSP/web-app implementation and offline regression coverage included; authentic reference-sample comparison and physical-device measurements are reserved for P5-E. See [P5-D design](P5_D_CABIN_SOUNDSTAGE.md).
+
+
+P6 instrument redesign: Toyota Prius 60-inspired compact wide HEV arc and digital speed display; Nissan Aura FE13-inspired side-by-side dial rings (POWER left, speed right), enhanced-mode enlarged center, responsive 3-column layout, original vector needles and ticks, readable SOC/energy flow. Rendered from existing physics; no OEM artwork or unsupported fuel/range data. Details: [Gauge Design](GAUGES.md).
