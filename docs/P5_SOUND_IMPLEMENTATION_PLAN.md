@@ -120,3 +120,11 @@
 - [Nissan 第2世代e-POWER公式解説](https://www.nissan-global.com/EN/INNOVATION/TECHNOLOGY/ARCHIVE/E_POWER_GEN2/)
 - [日産 オーラの音／エンジン作動のガイド（2022年資料）](https://www2.nissan.co.jp/SP/OM/AURA/2210/manual_t00qg6xl3a.pdf)
 - [Nissan Technical Review No.89 (2023) 静粛性技術解説](https://www.nissan-global.com/JP/TECHNICALREVIEW/BOOK/NISSAN_TECHINICAL_REVIEW_89/pageindices/index30.html) — **X-Trail等を含む一般技術であり、FE13の数値校正に流用しない**
+
+
+## P5-A execution status — initial delivery
+
+- Engine operation/combustion separation, typed audio telemetry, SOC headroom limits, engine motoring sink, and accompanying tests are implemented in PR #23.
+- Actual FE13 engine-drag threshold, available battery energy, gear ratio, motor maps and electric sound spectral gains are **not verified against OEM vehicle calibration**.
+- P5-B/C will refine combustion/non-combustion mechanical voices, traction & generator frequency profiles and cabin masking.
+- P5-A is a functional engineering-model hardening step, not completed real-world fidelity validation.

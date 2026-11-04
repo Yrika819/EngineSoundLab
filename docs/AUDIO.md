@@ -49,3 +49,14 @@ Regression tests in `tests/electric-drive-audio.test.mjs` cover isolated motor, 
 Reference drivetrain topology only:
 - https://www.nissan-global.com/JP/INNOVATION/TECHNOLOGY/ARCHIVE/E_POWER/
 - https://toyota.jp/prius/
+
+
+## P5-A: authoritative typed audio telemetry
+
+`apps/web/src/audio-telemetry.ts` exports a pure `toAudioTelemetry(DriveState)` converter and `AudioTelemetry` contract. `apps/web/src/audio.ts` is the only runtime bridge from that contract to Web Audio's smoothed parameters (including its simplified fallback path).
+
+- `engineOperation`, `engineRpm`, `engineRotating` and `combustionGate` are separate. `RUNNING_FUELLED` is the only phase that can set the combustion audio gate.
+- Traction shaft RPM, signed shaft torque, signed traction power, regen electrical power, generator shaft RPM/output and electrically consumed unfuelled engine motoring power are exposed independently.
+- The exact P3+ normalized motor/regen/generator loudness values remain initially compatible. Redesigning their real-car spectral character is P5-B/P5-C; no manufacturer-calibrated PWM/order or equalizer values have been added.
+- The converter is deterministic, clamps invalid input values, and does not read DOM meter values. `CABIN` is the default future listening mode; cabinet/engine-bay acoustics are reserved for P5-D.
+- The existing P1 AudioWorklet's single combustion control remains; un-fuelled rotating machinery is **not** falsely passed through as fuelled combustion. Adding its mechanical voice is planned in P5-B.
