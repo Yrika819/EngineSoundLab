@@ -108,7 +108,7 @@ footer{color:#738da8;font-size:10px;display:flex;justify-content:space-between;f
 .dial-charge-tick{fill:none;stroke:#5abac4;stroke-width:6;stroke-linecap:round}
 .dial-tick{stroke:#8e94a4;stroke-width:1.0;opacity:.8}
 .dial-tick.major{stroke:#dbe1eb;stroke-width:1.8;opacity:1}
-.dial-number{font-size:12px;fill:#aeb8c7;font-family:Arial, sans-serif;font-weight:500;font-variant-numeric:tabular-nums}
+.dial-number{font-size:14px;fill:#d3ddea;font-family:Arial, sans-serif;font-weight:500;font-variant-numeric:tabular-nums}
 .dial-progress{fill:none;stroke:#cc3d48;stroke-width:5.5;stroke-linecap:round;filter:drop-shadow(0 0 3px #bb293966)}
 .dial-progress.charging{stroke:#6ec3df;filter:drop-shadow(0 0 3px #469ed755)}
 .dial-pointer{fill:#e9f1f8;stroke:#fff;stroke-width:.5;filter:drop-shadow(0 0 3px #fff4)}
@@ -216,3 +216,63 @@ body{overscroll-behavior-x:none}
 .vehicle .cabin-settings .mix-balance{grid-column:1/-1}
 .cabin-settings .mix-balance select{border-color:#437f83}
 .cabin-settings select:disabled{opacity:.55;cursor:not-allowed}
+
+
+/* P6.1 visual QA findings: small-phone mechanical layout must privilege
+   legible outside dials over a three-column information-dense center.
+   The POWER and SPEED instruments ALWAYS remain on the same top row. */
+@media(max-width:360px){
+ .aura-cluster-body,.gauge-aura.enhanced .aura-cluster-body{
+  grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+  gap:6px 8px;
+  align-items:center
+ }
+ .aura-cluster-body .aura-power{grid-column:1;grid-row:1}
+ .aura-cluster-body .aura-velocity{grid-column:2;grid-row:1}
+ .aura-cluster-body .aura-center-panel{
+  grid-column:1/-1;grid-row:2;min-height:72px;
+  display:grid;grid-template-columns:1fr 1fr;align-items:center;
+  gap:3px 8px;padding:7px 10px;
+  border-top:1px solid #343d4e;
+  background:linear-gradient(180deg,#15213499,#0b1425aa)
+ }
+ .aura-center-eyebrow,.aura-center-panel>strong{grid-column:1}
+ .aura-center-panel>strong{font-size:12px}
+ .aura-energy-route{grid-column:2;grid-row:1/3;max-height:46px;width:90%}
+ .aura-energy-caption{grid-column:1/-1;font-size:10px;line-height:1.3}
+ .aura-battery-row,.aura-battery-bar,.aura-mini-readouts{grid-column:1/-1}
+ .aura-mini-readouts>span{font-size:10px}
+ .aura-battery-row strong{font-size:12px}
+ .gauge-aura.enhanced .aura-center-panel{
+  padding:8px 12px;min-height:88px;border-inline:0;border-top:1px solid #4d5971
+ }
+ .gauge-aura.enhanced .aura-energy-route{width:88%;max-height:52px}
+ .gauge-aura.enhanced .aura-dial-readout strong{font-size:clamp(24px,8vw,32px)}
+ .aura-dial-readout>span{font-size:10px}
+ .aura-dial-readout strong{font-size:clamp(24px,8vw,34px)}
+ .aura-dial-readout small{font-size:9px}
+ .cluster-tiny{font-size:9px}
+ .prius-cluster-footer .cluster-tiny{display:none}
+ .prius-flow-caption{font-size:9px}
+}
+@media(min-width:361px) and (max-width:430px){
+ .aura-mini-readouts>span{font-size:8px}
+ .aura-energy-caption{font-size:9px}
+ .cluster-tiny{font-size:8px}
+}
+
+/* P6.1: Enhanced originally allocated so much space to the center that
+   the 390/430px POWER and SPEED rings shrank to ~90px. Reserve two
+   readable outside dials, while styling the center as the focus. */
+@media(min-width:361px) and (max-width:430px){
+ .gauge-aura.enhanced .aura-cluster-body{
+  grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,1fr);
+  gap:1px
+ }
+ .gauge-aura.enhanced .aura-center-panel{
+  padding:4px 2px;
+  background:linear-gradient(180deg,#26334988,#111d3099);
+  border-inline:1px solid #52617b
+ }
+ .gauge-aura.enhanced .aura-energy-route{max-height:56px}
+}

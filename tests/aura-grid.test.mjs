@@ -59,3 +59,13 @@ test("P6 generated SVG dial, speed, charge and energy displays are available", (
     'data-field="aura-power"', 'data-field="aura-soc"'
   ]) assert.ok(markup.includes(field),field);
 });
+
+test("P6.1 ultra-narrow display gives both dials the first row and center the second",()=>{
+  const breakpoint=css.indexOf("@media(max-width:360px)");
+  assert.ok(breakpoint>=0);
+  const narrow=css.slice(breakpoint);
+  assert.match(narrow,/\.aura-cluster-body[^}]*grid-template-columns:\s*minmax\(0,1fr\) minmax\(0,1fr\)/);
+  assert.match(narrow,/\.aura-cluster-body \.aura-power\{grid-column:1;grid-row:1\}/);
+  assert.match(narrow,/\.aura-cluster-body \.aura-velocity\{grid-column:2;grid-row:1\}/);
+  assert.match(narrow,/\.aura-cluster-body \.aura-center-panel\{[^}]*grid-column:1\/-1;grid-row:2/);
+});

@@ -52,3 +52,11 @@ The drivetrain-to-power-gauge mapping remains illustrative, not factory-calibrat
 - PWA must contain the same compiled template and CSS as the accepted branch.
 - Small-screen and wide-screen live visual QA is still necessary: static tests can ensure three equal layout columns but cannot prove phone-specific browser rasterization. Note unverified physical-device rendering explicitly until screenshots/inspection are available.
 - **No direct OEM illustration, font, copyrighted screenshot, or proprietary icons are embedded in the published app.** Screenshots and manufacturer manuals were research references only.
+
+## P6.1 — mobile browser screenshot/geometry audit
+
+The P6.1 suite adds actual mobile-emulated Chromium rendering with Playwright rather than relying exclusively on CSS/source-string assertions. It captures 36 deterministic instrument combinations (Prius, Aura Classic/Enhanced × 320/360/390/430px × EV/ACCEL/REGEN), plus full narrow-page screenshots, and uploads their geometry JSON files as CI artifacts.
+
+The **POWER and SPEED dials always share the same horizontal row**. At <=360px the center information area is deliberately moved below the pair to keep the rings legible; at >=361px it stays between the two dials. Browser checks enforce no page overflow, adequate dial diameters, readable speed and SOC, and synchronized gauge state. Source geometry and project CSS remain original designs, not manufacturer screenshots.
+
+See [P6.1 visual acceptance checks](P6_1_VISUAL_QA.md). **These are Chromium screenshots, not physical iPhone Safari or Android Chrome screenshots**. No approved pixel-diff baselines exist yet; an engineer still needs to inspect aesthetic accuracy against referenced official documents.

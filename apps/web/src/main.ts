@@ -227,4 +227,44 @@ window.addEventListener("pageshow",event=>{
  if(event.persisted)pauseForInterruption(); // bfcache restore never resumes throttle/audio
 });
 draw();
+
+// Development-only visual QA seam: exercise the REAL gauge UI with deterministic
+// DriveState fixtures, without waiting for real-time acceleration or starting
+// audio. Vite removes this code from the production bundle.
+if (import.meta.env.DEV) {
+ const qa = window as Window & {
+  __ESL_VISUAL_QA__?: (id: VehicleId, scene: "EV" | "ACCEL" | "REGEN") => void
+ };
+ qa.__ESL_VISUAL_QA__ = (id, scene) => {
+  if (running) throw new Error("Stop playback before running visual QA");
+  if (id !== "prius_60_hev" && id !== "aura_fe13_epower")
+   throw new RangeError("Visual QA supports only the two hybrid cars");
+  if (!["EV", "ACCEL", "REGEN"].includes(scene))
+   throw new RangeError("Unsupported visual QA driving scene");
+  vehicleProfile.value = id;
+  vehicleProfile.dispatchEvent(new Event("change", { bubbles: true }));
+  const accelerating = scene === "ACCEL";
+  const recovering = scene === "REGEN";
+  vehicle = {
+   ...makeDriveState(id),
+   speedMps: accelerating ? 31.1 : recovering ? 15 : 7.2,
+   rpm: accelerating ? (id === "aura_fe13_epower" ? 2700 : 3100) : 0,
+   load: accelerating ? .78 : 0,
+   enginePhase: accelerating ? "RUNNING" : "STOPPED",
+   engineOperation: accelerating ? "RUNNING_FUELLED" : "STOPPED",
+   combustionActive: accelerating,
+   batterySoc: accelerating ? .51 : recovering ? .71 : .64,
+   batteryPowerKw: accelerating ? 18 : recovering ? -12 : 8,
+   motorPowerKw: accelerating ? 48 : recovering ? -17 : 13,
+   tractionMotorTorqueNm: accelerating ? 180 : recovering ? -125 : 86,
+   generatorPowerKw: accelerating ? 17 : 0,
+   regenPowerKw: recovering ? 12 : 0,
+   engineMechanicalKw: accelerating ? 65 : 0,
+   mg1Rpm: accelerating ? 2800 : 0,
+   mg2Rpm: accelerating ? 6100 : recovering ? 2900 : 1900
+  };
+  draw();
+ };
+}
+
 void registerOfflineApp(message=>{offlineStatus.textContent=message;});
