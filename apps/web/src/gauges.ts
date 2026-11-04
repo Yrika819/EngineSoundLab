@@ -3,6 +3,26 @@ import type { DriveState, VehicleId } from "./powertrains";
 export type GaugeMode = "AUTO" | "SPORT" | "ENGINEERING" | "AURA_ENHANCED";
 export type GaugeLayout = "PRIUS" | "AURA_CLASSIC" | "AURA_ENHANCED" | "SPORT" | "ENGINEERING";
 
+/**
+ * P6.3: mutually exclusive electric-flow UI modes. Unlike a generic EV/HEV
+ * flag, this preserves the Prius power-split vs Aura series e-POWER distinction.
+ * It is inferred strictly from existing telemetry, not an invented ECU state.
+ */
+export type GaugeEnergyMode =
+  "EV" | "REGEN" | "GENERATION" | "HYBRID" | "ENGINE_ON" | "SPINNING";
+
+export function gaugeEnergyMode(g: GaugeSnapshot, vehicle: VehicleId): GaugeEnergyMode {
+  // Regen is the dominant visible flow, even if a generator runs concurrently.
+  if (g.zone === "CHARGE") return "REGEN";
+  if (g.engineRunning) {
+    if (vehicle === "prius_60_hev") return "HYBRID";
+    return g.generatorPowerKw > 0.1 ? "GENERATION" : "ENGINE_ON";
+  }
+  if (g.engineRpm > 25) return "SPINNING";
+  return "EV";
+}
+
+
 export interface GaugeSnapshot {
   layout: GaugeLayout;
   speedKmh: number;
