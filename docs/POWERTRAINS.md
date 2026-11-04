@@ -47,7 +47,7 @@ All numeric presets need a source marker: `official`, `measured`, `estimated`, o
 
 **Energy sign conventions:** `motorPowerKw` is mechanical wheel power (+drive, -regen), `regenPowerKw` a positive display-only recovered electrical amount, `batteryPowerKw = motorElectricalKw + auxiliaries - generatorPowerKw`, and SOC integrates in kWh. Recovered power is never counted twice in wheel braking.
 
-**Calibration caveat:** body mass, motor torque/power, battery usable capacity, estimated efficiencies, hysteresis thresholds, conceptual gear teeth and power limits are *placeholders*. Battery SOC is clamped but full electrical current/power limiting at SOC extrema is not yet implemented. This is a functional topology demo rather than a validated vehicle digital twin.
+**Calibration caveat:** body mass, motor torque/power, battery usable capacity, estimated efficiencies, hysteresis thresholds, conceptual gear teeth and power limits are *placeholders*. In the original P2 model, SOC was clamped without upstream power limits; P5-A now caps estimated battery charge/discharge power and energy-per-step before SOC integration. This still is **not** manufacturer-calibrated current or thermal protection. This is a functional topology demo rather than a validated vehicle digital twin.
 
 The audio worklet has independent `combustion`, `motor` and `motorRpm` channels. Prius defaults to synthetic I4; Aura defaults to synthetic I3. Manual sound profile selection changes acoustics only, not vehicle performance.
 
