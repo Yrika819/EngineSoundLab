@@ -45,7 +45,7 @@ test("all hashed app bundles and offline synthesis modules are precached",()=>{
  const required=[
   "./","./index.html","./manifest.webmanifest","./icon.svg",
   "./apple-touch-icon.png","./icon-192.png","./icon-512.png",
-  "./engine-worklet.js","./synth-core.js","./electric-synth.js",
+  "./engine-worklet.js","./synth-core.js","./electric-synth.js","./vehicle-combustion.js",
   ...assets.map(a=>"./assets/"+a)
  ];
  for(const path of required){
@@ -85,6 +85,7 @@ test("worker installs relative to subpath, keeps offline navigation available an
  assert.ok(cache.has(scope+"index.html"));
  assert.ok(cache.has(scope+"engine-worklet.js"));
  assert.ok(cache.has(scope+"electric-synth.js"));
+ assert.ok(cache.has(scope+"vehicle-combustion.js"));
  assert.ok([...cache.keys()].every(url=>url.startsWith(scope)));
  let response;
  const navRequest={url:scope,method:"GET",mode:"navigate"};
