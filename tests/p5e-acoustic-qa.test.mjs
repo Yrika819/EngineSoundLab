@@ -117,3 +117,19 @@ test("P5-E: invalid QA inputs are rejected instead of generating mislabeled audi
   assert.throws(()=>sampleParams(CARS[0],{id:"fake"}),RangeError);
   assert.throws(()=>wavMono16(new Float32Array(4),8000),RangeError);
 });
+
+test("P5-E: EV electric motor pitch rises with shaft RPM at 44.1 and 48 kHz",()=>{
+  for(const car of CARS){
+    const peaks=[];
+    for(const rate of RATES){
+      const launch=renderClip(car,SCENARIOS.find(s=>s.id==="ev-launch"),rate,.45);
+      const cruise=renderClip(car,SCENARIOS.find(s=>s.id==="ev-gentle"),rate,.45);
+      assert.ok(cruise.stats.spectrum.dominantHz>
+        launch.stats.spectrum.dominantHz*1.6,
+        "Motor order did not climb with shaft speed: "+car.id+" / "+rate);
+      peaks.push(cruise.stats.spectrum.dominantHz);
+    }
+    assert.ok(Math.abs(peaks[0]-peaks[1])<12,
+      "44.1/48kHz differ in synthesized EV dominant frequency: "+car.id);
+  }
+});
