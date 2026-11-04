@@ -12,6 +12,7 @@ const publicFiles = [
   "icon-512.png",
   "engine-worklet.js",
   "synth-core.js",
+  "vehicle-combustion.js",
   "electric-synth.js"
 ];
 
