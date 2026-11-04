@@ -19,7 +19,7 @@ test("worklet registers and consumes UI parameter channels", () => {
   assert.equal(registeredName, "engine-synth-p1");
   assert.ok(Worklet);
   const descriptors = Worklet.parameterDescriptors;
-  for (const name of ["rpm", "load", "throttle", "speed", "combustion", "active", "motor", "motorRpm", "regen", "generator", "generatorRpm", "electricProfile"]) {
+  for (const name of ["rpm", "load", "throttle", "speed", "combustion", "active", "motor", "motorRpm", "regen", "generator", "generatorRpm", "electricProfile", "iceVehicle", "engineOperation"]) {
     assert.ok(descriptors.some(param => param.name === name), "missing " + name);
   }
   const node = new Worklet();
@@ -36,7 +36,9 @@ test("worklet registers and consumes UI parameter channels", () => {
     regen: Float32Array.of(0.3),
     generator: Float32Array.of(0.4),
     generatorRpm: Float32Array.of(2600),
-    electricProfile: Float32Array.of(2)
+    electricProfile: Float32Array.of(2),
+    iceVehicle: Float32Array.of(2),
+    engineOperation: Float32Array.of(2)
   };
   assert.equal(node.process([], output, parameters), true);
   assert.ok(output[0][0].some(value => value !== 0), "silent worklet output");
@@ -53,4 +55,30 @@ test("worklet can change I3/I4/I6 geometry without resetting the audio node", ()
   assert.equal(node.synth.profile.cylinders, 6);
   node.port.onmessage({ data: { type: "setProfile", profileId: "not-supported" } });
   assert.equal(node.synth.profileId, "i6");
+});
+
+
+test("P5-B worklet drives correct vehicle-specific combustion and preserves UI profile updates", () => {
+  const node=new Worklet({processorOptions:{profileId:"i3"}});
+  const output=[[new Float32Array(128),new Float32Array(128)]];
+  const params=Object.fromEntries(Worklet.parameterDescriptors.map(p=>[p.name,Float32Array.of(p.defaultValue)]));
+  params.rpm=Float32Array.of(2800);
+  params.combustion=Float32Array.of(1);
+  params.active=Float32Array.of(1);
+  params.load=Float32Array.of(0.8);
+  params.iceVehicle=Float32Array.of(2);
+  params.engineOperation=Float32Array.of(2);
+  for(let i=0;i<200;i++)node.process([],output,params);
+  assert.ok(node.synth.vehicleBlend>0.98,"vehicle voice not selected");
+  assert.ok(node.synth.vehicleIce.firingEvents>0,"combustion never ignited");
+  const current=node.synth.vehicleIce.firingEvents;
+  params.engineOperation=Float32Array.of(3);
+  params.combustion=Float32Array.of(0);
+  for(let i=0;i<400;i++)node.process([],output,params);
+  // Fuel gate decay is smoothed, so allow at most 1 extra event.
+  assert.ok(node.synth.vehicleIce.firingEvents-current<=2,
+    "ignition should end when vehicle enters non-fuelled rotation");
+  node.port.onmessage({data:{type:"setProfile",profileId:"i4"}});
+  assert.equal(node.synth.vehicleIce.cylinderProfile,"i4");
+  assert.deepEqual(output[0][0],output[0][1]);
 });
