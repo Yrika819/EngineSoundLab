@@ -19,3 +19,6 @@ Full details: [Implementation plan](IMPLEMENTATION_PLAN.md).
 
 
 P5-C acoustic slice: electric traction/generator/starter/regen source separation, signed torque and high-order anti-aliasing implemented. Physical-phone A/B and cabin EQ remain in P5-D/E.
+
+
+P5-D cabin acoustics: source-separated fuelled engine, unfuelled machinery, traction, generator, tyre and wind, plus two estimated listening positions and a road-surface setting. DSP/web-app implementation and offline regression coverage included; authentic reference-sample comparison and physical-device measurements are reserved for P5-E. See [P5-D design](P5_D_CABIN_SOUNDSTAGE.md).
