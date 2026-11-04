@@ -65,9 +65,10 @@ export function makeGaugeSnapshot(
       energyFlow = "エンジン＋モーター → 車輪";
     else energyFlow = "バッテリー → モーター → 車輪";
   }
-  const engineState = drive.enginePhase === "RUNNING" ? "エンジン稼働"
-    : drive.enginePhase === "STARTING" ? "エンジン始動中"
-    : drive.enginePhase === "STOPPING" ? "エンジン停止動作"
+  const engineState = drive.engineOperation === "RUNNING_FUELLED" ? "エンジン燃焼稼働"
+    : drive.engineOperation === "SPINNING_UNFUELLED" ? "燃焼なし回転"
+    : drive.engineOperation === "STARTING" ? "エンジン始動中"
+    : drive.engineOperation === "STOPPING" ? "エンジン停止動作"
     : "エンジン停止";
   return {
     layout,
