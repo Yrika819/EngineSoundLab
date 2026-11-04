@@ -129,9 +129,6 @@ export class ElectricDriveSynth {
       Math.min(this.peakLimit, genHz)) % (2 * Math.PI);
     this.generatorHarmonicPhase = (this.generatorHarmonicPhase + step *
       Math.min(this.peakLimit, genHarmonicHz)) % (2 * Math.PI);
-    const carrier = clip(this.carrierHz + 0.12 * elecHz, 0, this.peakLimit);
-    this.pwmPhase = (this.pwmPhase + step * carrier) % (2 * Math.PI);
-
     // A motor's load changes its magnetic order harmonics. Negative torque
     // adds a distinct regen order; it does not alter the engine fuel gate.
     const negativeTorque = Math.max(0, -this.motorTorque);
