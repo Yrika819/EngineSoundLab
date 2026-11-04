@@ -123,6 +123,18 @@ test.describe("P6.1 real mobile browser visual matrix", () => {
         if(scene==="REGEN")await expect(skin).toHaveClass(/regenerating/);
         if(scene==="ACCEL")await expect(skin).toHaveClass(/generating/);
         if(scene==="EV")await expect(skin).not.toHaveClass(/regenerating|generating/);
+        const expectedMode=scene==="REGEN"?"regen":scene==="ACCEL"?"generation":"ev";
+        await expect(skin).toHaveAttribute("data-energy-flow",expectedMode);
+        // The arrow itself is route-specific. An Aura engine generator never
+        // substitutes the EV battery-to-wheel arrow.
+        const activeRoute=skin.locator('[data-route="'+expectedMode+'"]');
+        await expect(activeRoute).toHaveCSS("opacity","1");
+        await expect(skin.locator('[data-route="'+(scene==="REGEN"?"ev":"regen")+'"]'))
+          .toHaveCSS("opacity","0");
+        if(scene==="ACCEL")
+          await expect(skin.locator(".energy-generator")).toHaveCSS("opacity","1");
+        else
+          await expect(skin.locator(".energy-generator")).toHaveCSS("opacity","0");
         expect(await skin.locator('[data-ring="power"]').getAttribute("d")).toMatch(/^M /);
         await expect(skin.locator('[data-field="aura-mode"]'))
           .toHaveText(scene==="REGEN"?"REGEN":scene==="ACCEL"?"GENERATING":"EV DRIVE");
@@ -132,22 +144,89 @@ test.describe("P6.1 real mobile browser visual matrix", () => {
           .toHaveText(scene==="ACCEL"?"HEV":"EV");
         await expect(skin.locator('[data-field="prius-zone"]'))
           .toHaveText(scene==="REGEN"?"CHARGE":scene==="ACCEL"?"POWER":"ECO");
+        await expect(skin).toHaveAttribute("data-energy-flow",
+          scene==="REGEN"?"regen":scene==="ACCEL"?"hybrid":"ev");
+        await expect(skin.locator(".prius-flow-strip i")).toHaveCount(3);
         await expect(skin.locator(".prius-right-readout .prius-gear")).toContainText("D");
         await expect(skin.locator(".prius-speed-readout .prius-gear")).toHaveCount(0);
         if(scene==="ACCEL"){
-          await expect(skin.locator('[data-field="prius-drive"]')).toHaveText("GEN");
+          await expect(skin.locator('[data-field="prius-drive"]')).toHaveText("HEV");
           await expect(skin.locator('[data-field="prius-drive"]'))
-            .toHaveAttribute("aria-label","GENERATING");
+            .toHaveAttribute("aria-label","HYBRID DRIVE");
           await expect(skin.locator('[data-field="prius-flow"]'))
-            .toHaveText("発電中");
+            .toHaveText("HEV駆動");
           await expect(skin.locator('[data-field="prius-flow"]'))
-            .toHaveAttribute("aria-label","エンジン → 発電");
+            .toHaveAttribute("aria-label","エンジン＋モーター → 車輪");
         }
       }
 
 
     });
   }
+
+  // P6.3: same-car transitions without resetting the page. State text must
+  // update synchronously while the visual needle approaches its next target.
+  for (const id of ["aura_fe13_epower","prius_60_hev"]) {
+    test("smooth live transitions "+id,async({page})=>{
+      await page.setViewportSize({width:390,height:780});
+      await page.goto("/");
+      await page.waitForFunction(()=>typeof window.__ESL_VISUAL_QA__==="function");
+      const update=scene=>page.evaluate(([car,mode])=>
+        window.__ESL_VISUAL_QA__(car,mode),[id,scene]);
+      await update("EV");
+      const skin=page.locator(id==="aura_fe13_epower"?".gauge-aura":".gauge-prius");
+      const circle=id==="aura_fe13_epower";
+      const needle=skin.locator('[data-needle="speed"]');
+      const initial=circle?await needle.getAttribute("transform"):
+        await skin.locator('[data-ring="prius"]').getAttribute("d");
+      await update("ACCEL");
+      const immediate=circle?await needle.getAttribute("transform"):
+        await skin.locator('[data-ring="prius"]').getAttribute("d");
+      // One telemetry frame cannot jump instantaneously to the new target.
+      expect(immediate).toBe(initial);
+      if(circle){
+        await expect(skin).toHaveAttribute("data-energy-flow","generation");
+        await expect(skin.locator('[data-field="aura-mode"]')).toHaveText("GENERATING");
+      }else{
+        await expect(skin).toHaveAttribute("data-energy-flow","hybrid");
+        await expect(skin.locator('[data-field="prius-drive"]')).toHaveText("HEV");
+      }
+      await expect.poll(async()=>circle?needle.getAttribute("transform"):
+        skin.locator('[data-ring="prius"]').getAttribute("d"),{timeout:2200})
+        .not.toBe(initial);
+      const after=circle?await needle.getAttribute("transform"):
+        await skin.locator('[data-ring="prius"]').getAttribute("d");
+      await update("REGEN");
+      await expect(skin).toHaveAttribute("data-energy-flow","regen");
+      if(circle){
+        await expect(skin.locator('[data-field="aura-power"]')).toContainText("-");
+        await expect(skin.locator('[data-route="regen"]')).toHaveCSS("opacity","1");
+        await expect.poll(async()=>needle.getAttribute("transform"),{timeout:2500})
+          .not.toBe(after);
+      }else{
+        await expect(skin.locator('[data-field="prius-zone"]')).toHaveText("CHARGE");
+        await expect.poll(async()=>skin.locator('[data-ring="prius"]').getAttribute("d"),
+          {timeout:2500}).not.toBe(after);
+      }
+    });
+  }
+
+  test("reduced-motion preference leaves accurate static flow arrows without animated needles",
+    async({page})=>{
+      await page.emulateMedia({reducedMotion:"reduce"});
+      await page.goto("/");
+      await page.waitForFunction(()=>typeof window.__ESL_VISUAL_QA__==="function");
+      await page.evaluate(()=>window.__ESL_VISUAL_QA__("aura_fe13_epower","EV"));
+      await page.evaluate(()=>window.__ESL_VISUAL_QA__("aura_fe13_epower","REGEN"));
+      const aura=page.locator(".gauge-aura");
+      await expect(aura).toHaveAttribute("data-energy-flow","regen");
+      await expect(aura.locator('[data-route="regen"]')).toHaveCSS("opacity","1");
+      await expect(aura.locator('[data-route="regen"]')).toHaveCSS("animation-name","none");
+      await expect(aura.locator('[data-needle="speed"]'))
+        .toHaveAttribute("transform",/^rotate\(/);
+      // The generator path stays hidden during regeneration.
+      await expect(aura.locator('[data-route="generation"]')).toHaveCSS("opacity","0");
+    });
 
   test("dev-only fixture rejects unsupported car and does not start audio",async({page})=>{
     await page.goto("/");
