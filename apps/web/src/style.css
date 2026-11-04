@@ -276,3 +276,128 @@ body{overscroll-behavior-x:none}
  }
  .gauge-aura.enhanced .aura-energy-route{max-height:56px}
 }
+
+
+/* P6.2: original vector artwork tuned by inspecting the actual P6.1
+   screenshot matrix and manufacturer instrument information hierarchy. */
+.gauge-prius,.gauge-aura{
+ font-family:system-ui,-apple-system,"Noto Sans JP",sans-serif;
+ font-variant-numeric:tabular-nums
+}
+.gauge-prius{
+ border-color:#2a5262;
+ background:linear-gradient(115deg,#ffffff07,transparent 24% 83%,#ffffff04),
+ radial-gradient(ellipse at 48% 12%,#1a303a 0%,#0b1923 55%,#030910 100%)
+}
+.gauge-aura{
+ border-color:#485066;
+ background:linear-gradient(110deg,#ffffff06,transparent 33% 80%,#ffffff04),
+ radial-gradient(ellipse at 50% 0%,#232838,#0c1320 60%,#040711 100%)
+}
+.gauge-aura .dial-bezel-rim{fill:#101723;stroke:#626e85;stroke-width:.8;opacity:.85}
+.gauge-aura .dial-bezel{fill:#070c13;stroke:#353c4e;stroke-width:1}
+.gauge-aura .dial-bezel-inset{stroke:#182436;stroke-width:2}
+.gauge-aura .aura-power .dial-bezel-inset{fill:url("#gauge-surface-power")}
+.gauge-aura .aura-velocity .dial-bezel-inset{fill:url("#gauge-surface-speed")}
+.gauge-aura .dial-inner-rule{fill:none;stroke:#8094ac;stroke-width:.75;opacity:.2}
+.gauge-aura .dial-track{stroke:#2d3545;stroke-width:7}
+.gauge-aura .dial-tick{stroke:#9ba8bb;stroke-width:1;opacity:.85}
+.gauge-aura .dial-tick.major{stroke:#e7effd;stroke-width:1.9}
+.gauge-aura .dial-number{font-size:12px;fill:#d7e0ee;font-weight:650}
+.gauge-aura .dial-pointer{
+ fill:#e9f9ff;stroke:#ffffff;stroke-width:.7;
+ filter:drop-shadow(0 0 4px #9bdaf1)
+}
+.gauge-aura .dial-progress{
+ stroke:#d04450;stroke-width:6.3;
+ filter:drop-shadow(0 0 4px #e0414c73)
+}
+.gauge-aura .dial-progress.charging{
+ stroke:#59bde1;filter:drop-shadow(0 0 4px #61cce27c)
+}
+.gauge-aura .aura-dial-readout{
+ top:38%;width:69%;
+ display:flex;flex-direction:column;align-items:center;
+ justify-content:center;gap:0;text-align:center
+}
+.gauge-aura .aura-dial-readout>span{
+ font-size:clamp(9px,1.9vw,11px);line-height:1.05;
+ letter-spacing:1px;color:#a6b8cc
+}
+.gauge-aura .aura-dial-readout strong{
+ font-size:clamp(24px,5.3vw,46px);
+ font-weight:700;line-height:1.1;
+ letter-spacing:-1.1px;color:#f3f8ff;
+ text-shadow:0 0 8px #d7ebff21
+}
+.gauge-aura .aura-dial-readout small{
+ display:block;font-size:clamp(9px,1.7vw,11px);
+ line-height:1.1;color:#a9bfd6
+}
+.gauge-aura .aura-center-panel>strong{
+ font-weight:800;letter-spacing:.5px;color:#f1f8ff;
+ text-shadow:0 0 8px #74c7f72b
+}
+.gauge-aura .aura-center-panel{
+ background:radial-gradient(ellipse at 50% 45%,#24405c50,transparent 72%)
+}
+.gauge-aura.regenerating .energy-wire,
+.gauge-aura.regenerating .energy-arrow{stroke:#7ad2ed}
+.gauge-aura.regenerating .energy-arrow{
+ transform:rotate(180deg);transform-origin:66px 27px
+}
+.gauge-aura.regenerating .aura-meter-mode{color:#77d8fc}
+.gauge-aura.generating:not(.regenerating) .energy-wire{stroke:#94f0cb}
+.gauge-aura.enhanced .aura-center-panel{
+ background:linear-gradient(180deg,#21334f7d,#1020374d);
+ border-inline:1px solid #51627d;
+ box-shadow:inset 0 0 14px #80abdd0a
+}
+.gauge-aura.enhanced .aura-energy-route{
+ filter:drop-shadow(0 0 3px #75d1ff19)
+}
+.gauge-aura.enhanced .aura-center-panel>strong{
+ font-size:clamp(11px,2.5vw,18px)
+}
+.gauge-prius .prius-outer-guide{
+ fill:none;stroke:#577884;stroke-width:1;opacity:.47
+}
+.gauge-prius .prius-speed-readout{
+ display:flex;flex-direction:column;align-items:center;gap:0;
+ justify-content:center;margin-top:-1%
+}
+.gauge-prius .prius-speed-readout strong{
+ font-size:clamp(34px,8.7vw,70px);font-weight:550;
+ letter-spacing:-1.5px;line-height:.99
+}
+.gauge-prius .prius-speed-readout small{
+ font-size:clamp(9px,2vw,12px);letter-spacing:.25px;margin-top:1px
+}
+.gauge-prius .prius-right-readout>.prius-gear{
+ display:inline-flex;align-self:flex-start;align-items:center;
+ min-width:21px;min-height:21px;justify-content:center;
+ border:1px solid #426b69;border-radius:5px;
+ background:#0b3933;color:#a0ffdc;
+ font-size:clamp(12px,2.8vw,17px);font-weight:850
+}
+.gauge-prius .prius-left-readout>strong{
+ overflow-wrap:normal;word-break:keep-all
+}
+.gauge-prius .prius-arc-live{
+ stroke-width:4.8;filter:drop-shadow(0 0 3px #70e7d39b)
+}
+@media(max-width:360px){
+ .gauge-prius .prius-speed-readout strong{font-size:clamp(30px,9.5vw,36px)}
+ .gauge-prius .prius-left-readout>strong{
+  font-size:11px;letter-spacing:-.15px
+ }
+ .gauge-prius .prius-right-readout>.prius-gear{
+  min-width:18px;min-height:18px;font-size:12px
+ }
+ .gauge-prius .prius-flow-caption{font-size:9px}
+ .gauge-aura .aura-dial-readout strong{font-size:clamp(23px,8vw,31px)}
+ .gauge-aura .aura-dial-readout>span,
+ .gauge-aura .aura-dial-readout small{font-size:9px}
+ .gauge-aura .aura-dial-sub{display:none}
+ .gauge-aura.enhanced .aura-center-panel{border-inline:0}
+}
