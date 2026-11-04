@@ -101,7 +101,8 @@ export class EngineSynthCore {
   next(targetRpm, targetLoad, targetThrottle, targetSpeed, targetActive = 1,
        targetCombustion = 1, targetMotor = 0, targetMotorRpm = 0,
        targetRegen = 0, targetGenerator = 0, targetGeneratorRpm = 0,
-       electricProfile = 0, iceProfile = 0, engineMotoring = 0) {
+       electricProfile = 0, iceProfile = 0, engineMotoring = 0,
+       motorTorque = 0, generatorMotoring = 0) {
     const rpm = clamp(targetRpm, 0, 8000, 850);
     const load = clamp(targetLoad, 0, 1);
     const throttle = clamp(targetThrottle, 0, 1);
@@ -173,7 +174,8 @@ export class EngineSynthCore {
     // Electric synthesis is independent of fuel combustion. Traction, generator
     // and regen voices use their own shaft rates and independent amplitudes.
     const electricVoice = this.electric.next(targetMotor, targetMotorRpm,
-      targetRegen, targetGenerator, targetGeneratorRpm, electricProfile);
+      targetRegen, targetGenerator, targetGeneratorRpm, electricProfile,
+      motorTorque, generatorMotoring);
     // P5-B: independent vehicle-specific ICE timbre and engine-motoring
     // voice. A rotating but unfuelled engine does not ignite fuel/exhaust.
     this.iceAcoustics.next(pressure, crankRadians, this.rpm, this.load,
