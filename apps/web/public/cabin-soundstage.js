@@ -14,19 +14,19 @@ const clip = (x, low, high) =>
 
 export const SOUNDSTAGE_PRESETS = Object.freeze({
   GENERIC: Object.freeze({
-    engineGain: 0.85, engineCutoffHz: 1150,
+    engineGain: 0.28, engineCutoffHz: 1150,
     motoringGain: 0.60, tractionGain: 0.85,
     generatorGain: 0.58, electricCutoffHz: 3900,
     tyreGain: 1.0, windGain: 1.0
   }),
   PRIUS: Object.freeze({
-    engineGain: 0.76, engineCutoffHz: 950,
+    engineGain: 0.24, engineCutoffHz: 950,
     motoringGain: 0.52, tractionGain: 0.80,
     generatorGain: 0.48, electricCutoffHz: 3300,
     tyreGain: 0.90, windGain: 0.86
   }),
   AURA: Object.freeze({
-    engineGain: 0.71, engineCutoffHz: 1030,
+    engineGain: 0.25, engineCutoffHz: 1030,
     motoringGain: 0.48, tractionGain: 0.84,
     generatorGain: 0.43, electricCutoffHz: 3400,
     tyreGain: 0.85, windGain: 0.84
@@ -119,10 +119,10 @@ export class CabinSoundstage {
       (2 * Math.PI * this.engineCutoff) / this.rate, 0.015, 0.52);
     const electricAlpha = clip(
       (2 * Math.PI * this.electricCutoff) / this.rate, 0.020, 0.70);
-    const ice = clip(combustion, -2, 2);
-    const machinery = clip(engineMotoring, -2, 2);
-    const drive = clip(traction, -2, 2);
-    const gen = clip(generator, -2, 2);
+    const ice = clip(combustion, -64, 64);
+    const machinery = clip(engineMotoring, -64, 64);
+    const drive = clip(traction, -64, 64);
+    const gen = clip(generator, -64, 64);
     this.engineLow += engineAlpha * (ice - this.engineLow);
     this.motoringLow += engineAlpha * (machinery - this.motoringLow);
     this.tractionLow += electricAlpha * (drive - this.tractionLow);
