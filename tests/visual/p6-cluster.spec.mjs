@@ -106,6 +106,23 @@ test.describe("P6.1 real mobile browser visual matrix", () => {
         else expect(motor).toBeGreaterThan(0);
         await expect(skin.locator('[data-needle="power"]')).toHaveAttribute("transform",/^rotate\(/);
         await expect(skin.locator('[data-needle="speed"]')).toHaveAttribute("transform",/^rotate\(/);
+        // P6.2: the short marker never crosses the central digital value.
+        for(const kind of ["power","speed"]){
+          const marker=skin.locator('[data-peripheral-needle="'+kind+'"]');
+          await expect(marker).toHaveCount(1);
+          await expect(marker).toHaveAttribute("d","M 100 10 L 94.6 28 L 105.4 28 Z");
+        }
+        const readouts=await skin.locator(".aura-dial-readout").evaluateAll(nodes=>
+          nodes.map(node=>{
+            const digit=node.querySelector("strong").getBoundingClientRect();
+            const unit=node.querySelector("small").getBoundingClientRect();
+            return {digitBottom:digit.bottom,unitTop:unit.top};
+          }));
+        for(const layout of readouts)
+          expect(layout.unitTop,"unit overlaps the central numeral").toBeGreaterThanOrEqual(layout.digitBottom-2);
+        if(scene==="REGEN")await expect(skin).toHaveClass(/regenerating/);
+        if(scene==="ACCEL")await expect(skin).toHaveClass(/generating/);
+        if(scene==="EV")await expect(skin).not.toHaveClass(/regenerating|generating/);
         expect(await skin.locator('[data-ring="power"]').getAttribute("d")).toMatch(/^M /);
         await expect(skin.locator('[data-field="aura-mode"]'))
           .toHaveText(scene==="REGEN"?"REGEN":scene==="ACCEL"?"GENERATING":"EV DRIVE");
@@ -115,6 +132,17 @@ test.describe("P6.1 real mobile browser visual matrix", () => {
           .toHaveText(scene==="ACCEL"?"HEV":"EV");
         await expect(skin.locator('[data-field="prius-zone"]'))
           .toHaveText(scene==="REGEN"?"CHARGE":scene==="ACCEL"?"POWER":"ECO");
+        await expect(skin.locator(".prius-right-readout .prius-gear")).toContainText("D");
+        await expect(skin.locator(".prius-speed-readout .prius-gear")).toHaveCount(0);
+        if(scene==="ACCEL"){
+          await expect(skin.locator('[data-field="prius-drive"]')).toHaveText("GEN");
+          await expect(skin.locator('[data-field="prius-drive"]'))
+            .toHaveAttribute("aria-label","GENERATING");
+          await expect(skin.locator('[data-field="prius-flow"]'))
+            .toHaveText("発電中");
+          await expect(skin.locator('[data-field="prius-flow"]'))
+            .toHaveAttribute("aria-label","エンジン → 発電");
+        }
       }
 
 

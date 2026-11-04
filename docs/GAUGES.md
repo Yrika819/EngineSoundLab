@@ -60,3 +60,7 @@ The P6.1 suite adds actual mobile-emulated Chromium rendering with Playwright ra
 The **POWER and SPEED dials always share the same horizontal row**. At <=360px the center information area is deliberately moved below the pair to keep the rings legible; at >=361px it stays between the two dials. Browser checks enforce no page overflow, adequate dial diameters, readable speed and SOC, and synchronized gauge state. Source geometry and project CSS remain original designs, not manufacturer screenshots.
 
 See [P6.1 visual acceptance checks](P6_1_VISUAL_QA.md). **These are Chromium screenshots, not physical iPhone Safari or Android Chrome screenshots**. No approved pixel-diff baselines exist yet; an engineer still needs to inspect aesthetic accuracy against referenced official documents.
+
+## P6.2 — screenshot-led design review
+
+A real 39-image P6.1 screenshot audit motivated a peripheral-only Aura needle that no longer crosses POWER/SPEED digits, denser dial graduation, original instrument face depth and a vertical digit/unit hierarchy. Prius moves D outside the speed ring and shortens the cramped generating label. Aura Classic/Enhanced styling separates the center information priority; CHARGE reverses the schematic flow arrow. **All SVG artwork is original, not copied or manufacturer-calibrated.** Full design notes: [P6.2 meter refinement](P6_2_METER_DESIGN.md).
