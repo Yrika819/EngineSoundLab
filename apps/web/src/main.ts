@@ -233,17 +233,18 @@ draw();
 // audio. Vite removes this code from the production bundle.
 if (import.meta.env.DEV) {
  const qa = window as Window & {
-  __ESL_VISUAL_QA__?: (id: VehicleId, scene: "EV" | "ACCEL" | "REGEN") => void
+  __ESL_VISUAL_QA__?: (id: VehicleId, scene: "EV" | "ACCEL" | "REGEN" | "GEN_CHARGE") => void
  };
  qa.__ESL_VISUAL_QA__ = (id, scene) => {
   if (running) throw new Error("Stop playback before running visual QA");
   if (id !== "prius_60_hev" && id !== "aura_fe13_epower")
    throw new RangeError("Visual QA supports only the two hybrid cars");
-  if (!["EV", "ACCEL", "REGEN"].includes(scene))
+  if (!["EV", "ACCEL", "REGEN", "GEN_CHARGE"].includes(scene))
    throw new RangeError("Unsupported visual QA driving scene");
   vehicleProfile.value = id;
   vehicleProfile.dispatchEvent(new Event("change", { bubbles: true }));
-  const accelerating = scene === "ACCEL";
+  const generatorCharging = scene === "GEN_CHARGE";
+  const accelerating = scene === "ACCEL" || generatorCharging;
   const recovering = scene === "REGEN";
   vehicle = {
    ...makeDriveState(id),
@@ -254,7 +255,7 @@ if (import.meta.env.DEV) {
    engineOperation: accelerating ? "RUNNING_FUELLED" : "STOPPED",
    combustionActive: accelerating,
    batterySoc: accelerating ? .51 : recovering ? .71 : .64,
-   batteryPowerKw: accelerating ? 18 : recovering ? -12 : 8,
+   batteryPowerKw: generatorCharging ? -6 : accelerating ? 18 : recovering ? -12 : 8,
    motorPowerKw: accelerating ? 48 : recovering ? -17 : 13,
    tractionMotorTorqueNm: accelerating ? 180 : recovering ? -125 : 86,
    generatorPowerKw: accelerating ? 17 : 0,
