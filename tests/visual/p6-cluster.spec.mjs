@@ -149,6 +149,12 @@ test.describe("P6.1 real mobile browser visual matrix", () => {
         await expect(skin.locator(".prius-flow-strip i")).toHaveCount(3);
         await expect(skin.locator(".prius-right-readout .prius-gear")).toContainText("D");
         await expect(skin.locator(".prius-speed-readout .prius-gear")).toHaveCount(0);
+        if(scene==="EV"){
+          await expect(skin.locator('[data-field="prius-flow"]'))
+            .toHaveText("電池→駆動");
+          await expect(skin.locator('[data-field="prius-flow"]'))
+            .toHaveAttribute("aria-label","バッテリー → モーター");
+        }
         if(scene==="ACCEL"){
           await expect(skin.locator('[data-field="prius-drive"]')).toHaveText("HEV");
           await expect(skin.locator('[data-field="prius-drive"]'))
