@@ -1,5 +1,6 @@
 import { ElectricDriveSynth } from "./electric-synth.js";
 import { VehicleIceAcoustics } from "./ice-acoustics.js";
+import { CabinSoundstage } from "./cabin-soundstage.js";
 
 /**
  * EngineSoundLab original procedural audio DSP, P1 slice.
@@ -66,6 +67,7 @@ export class EngineSynthCore {
     this.resBGain = 1 - bRadius;
     this.electric = new ElectricDriveSynth(rate);
     this.iceAcoustics = new VehicleIceAcoustics(rate);
+    this.soundstage = new CabinSoundstage(rate, this.seed ^ 0x35a9cf13);
     this.setProfile(profileId);
   }
 
@@ -102,7 +104,8 @@ export class EngineSynthCore {
        targetCombustion = 1, targetMotor = 0, targetMotorRpm = 0,
        targetRegen = 0, targetGenerator = 0, targetGeneratorRpm = 0,
        electricProfile = 0, iceProfile = 0, engineMotoring = 0,
-       motorTorque = 0, generatorMotoring = 0) {
+       motorTorque = 0, generatorMotoring = 0,
+       listeningMode = 0, roadRoughness = 0.35) {
     const rpm = clamp(targetRpm, 0, 8000, 850);
     const load = clamp(targetLoad, 0, 1);
     const throttle = clamp(targetThrottle, 0, 1);
@@ -165,15 +168,12 @@ export class EngineSynthCore {
     const crankRadians = this.crankAngle * Math.PI / 180;
     const mechanical = Math.sin(crankRadians * this.profile.mechanicalOrder) * (0.013 + 0.025 * this.load);
 
-    // Road noise is retained when combustion is disabled. Shared with future EV modes.
-    const roadWhite = this.random();
-    this.roadLow += 0.025 * (roadWhite - this.roadLow);
-    const roadLevel = Math.pow(Math.min(1, this.speed / 40), 1.3);
-    const rolling = this.roadLow * 0.13 * roadLevel;
+    // Tyre and wind noise have their own bands in the P5-D soundstage.
+    // No duplicate rolling-noise bed is mixed here.
 
     // Electric synthesis is independent of fuel combustion. Traction, generator
     // and regen voices use their own shaft rates and independent amplitudes.
-    const electricVoice = this.electric.next(targetMotor, targetMotorRpm,
+    this.electric.next(targetMotor, targetMotorRpm,
       targetRegen, targetGenerator, targetGeneratorRpm, electricProfile,
       motorTorque, generatorMotoring);
     // P5-B: independent vehicle-specific ICE timbre and engine-motoring
@@ -184,8 +184,14 @@ export class EngineSynthCore {
     const combustionVoice =
       genericFuelledVoice * this.iceAcoustics.genericBlend +
       this.iceAcoustics.combustionVoice;
-    const mix = combustionVoice + this.iceAcoustics.motoringVoice +
-      rolling + electricVoice;
+    // Separate motor-drive and generating-machine buses for different
+    // estimated acoustic shielding at the listener position.
+    const tractionBus = this.electric.lastTraction + this.electric.lastGear +
+      this.electric.lastInverter + this.electric.lastRegen;
+    const generatorBus = this.electric.lastGenerator + this.electric.lastMotoring;
+    const mix = this.soundstage.next(combustionVoice,
+      this.iceAcoustics.motoringVoice, tractionBus, generatorBus,
+      this.speed, iceProfile, listeningMode, roadRoughness);
     // DC block + bounded saturation; no sample value leaves [-0.54, +0.54].
     this.hp = mix - this.prevMix + 0.995 * this.hp;
     this.prevMix = mix;

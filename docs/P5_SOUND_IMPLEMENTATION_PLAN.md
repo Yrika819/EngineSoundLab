@@ -150,3 +150,8 @@ These changes improve the model's qualitative plausibility; they are not a subst
 - Vehicle sound bridge consumes signed traction torque and distinct generator-motoring demand from P5-A rather than assuming electrical generation is equivalent to rotation.
 - Qualitatively different Prius MG1/MG2 and Aura EM47/generator orders are based on physical topology, not unverified OEM numerical data. Aliasing suppression added for high-order tones at 8/44.1/48/96kHz.
 - P5-D cabin masking and P5-E matched-reference listening/phone measurements still remain. Exact inverter PWM maps, pole pairs and gear teeth must stay identified as estimates.
+
+
+## P5-D engineering slice status
+
+P5-D adds a dedicated `CabinSoundstage` source mixer: individual cabin/engine-bay attenuation for ICE/motoring/traction/generator plus independent road and wind stochastic voices driven by vehicle speed. The user can change estimated listening position and coarse/smooth road texture without resetting or modifying powertrain physics. Listening-mode changes are smoothed, sound output remains protected by the original limiter, and the new offline module is PWA-precached. Exact OEM cabin transfer functions and real-car frequency/level calibration remain unresolved; P5-E owns real-device listening comparisons. Full notes: [P5-D](P5_D_CABIN_SOUNDSTAGE.md).

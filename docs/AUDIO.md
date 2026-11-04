@@ -99,3 +99,13 @@ Reference: https://car.watch.impress.co.jp/docs/event_repo/2023aee/1503945.html 
 - Above-Nyquist upper harmonics fade out rather than folding into the audible range. Profile/audio gain are interpolated; the audio loop does not allocate per-sample objects. Output remains covered by the existing compressor/soft limiter.
 - The old 6-argument `ElectricDriveSynth.next()` remains backward compatible. New optional arguments are signed torque and generator motoring; `EngineSynthCore.next()` appends them after the existing P5-B fields.
 - Validation: `tests/p5c-electric-machine.test.mjs`, `tests/p5c-electric-telemetry.test.ts`, `tests/worklet-bridge.test.mjs`, and PWA production build. A passing test proves signal routing and DSP stability, **not actual Prius/Aura sound authenticity**.
+
+## P5-D: vehicle cabin soundstage and road/wind masking
+
+The original `cabin-soundstage.js` now handles six independent audio buses: fuelled ICE, non-fuelled engine machinery, traction motor/reducer/inverter/regen, generator/starter, tyre/road and wind. The old core's duplicate road-noise bed was removed; road and wind are synthesized by the soundstage using separate deterministic noise states and speed-shaped envelopes.
+
+CABIN (default) uses **estimated** source-specific gains and lowpass shielding; ENGINE_BAY is an uncalibrated comparison perspective with different gain/ambient balance. Both settings smoothly crossfade. A road-surface selector (smooth/standard/coarse) varies tyre noise without modifying physical simulation or wind speed. At zero speed, tyre and wind sound sources are silent; EV operation can still include rolling/wind ambience without combustion. The modest ≤12% masking attenuation is secondary to raising the background noise floor and is designed not to pump the engine dynamically.
+
+The AudioWorklet receives `listenerMode` and `roadRoughness` after the existing P5-C channels. The engine, motoring, traction and generation buses remain independent, and the existing output limiter/compressor remain in place. The new `cabin-soundstage.js` joins the versioned PWA offline precache.
+
+Qualitative background: https://www2.nissan-global.com/EN/INNOVATION/TECHNOLOGY/ARCHIVE/E_POWER_GEN2/ and https://www.nissan-global.com/JP/INNOVATION/TECHNOLOGY/ARCHIVE/E_POWER_CONTROL/. The parameters are **not** OEM interior sound transfer measurements. See [P5-D design/QA](P5_D_CABIN_SOUNDSTAGE.md). Physical-phone listening tests remain outstanding.

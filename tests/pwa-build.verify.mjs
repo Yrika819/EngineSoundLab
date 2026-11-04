@@ -19,6 +19,8 @@ test("production HTML is installable and has an offline readiness indicator",()=
  assert.match(html, /rel="manifest" href="\.\/manifest\.webmanifest"/);
  assert.match(html, /apple-touch-icon\.png/);
  assert.match(html, /id="offline-status"/);
+ assert.match(html, /id="listener-mode"/);
+ assert.match(html, /id="road-surface"/);
  assert.match(html, /<meta name="viewport"/);
  assert.match(html, /src="\.\/assets\//);
 });
@@ -46,7 +48,7 @@ test("all hashed app bundles and offline synthesis modules are precached",()=>{
   "./","./index.html","./manifest.webmanifest","./icon.svg",
   "./apple-touch-icon.png","./icon-192.png","./icon-512.png",
   "./engine-worklet.js","./synth-core.js","./electric-synth.js",
-  "./ice-acoustics.js",
+  "./ice-acoustics.js","./cabin-soundstage.js",
   ...assets.map(a=>"./assets/"+a)
  ];
  for(const path of required){
@@ -86,6 +88,7 @@ test("worker installs relative to subpath, keeps offline navigation available an
  assert.ok(cache.has(scope+"index.html"));
  assert.ok(cache.has(scope+"engine-worklet.js"));
  assert.ok(cache.has(scope+"electric-synth.js"));
+ assert.ok(cache.has(scope+"cabin-soundstage.js"));
  assert.ok([...cache.keys()].every(url=>url.startsWith(scope)));
  let response;
  const navRequest={url:scope,method:"GET",mode:"navigate"};

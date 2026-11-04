@@ -1,5 +1,5 @@
 import type { DriveState } from "./powertrains";
-import { toAudioTelemetry } from "./audio-telemetry";
+import { toAudioTelemetry, type AudioListenerMode } from "./audio-telemetry";
 
 export type EngineSoundProfile = "i3" | "i4" | "i6";
 
@@ -12,6 +12,8 @@ export class EngineAudio {
   private master: GainNode | null = null;
   private active = false;
   private profile: EngineSoundProfile = "i4";
+  private listenerMode: AudioListenerMode = "CABIN";
+  private roadRoughness = 0.35;
   simplified = false;
 
   /** Changes only the sound profile; the generic driving physics is shared. */
@@ -19,6 +21,20 @@ export class EngineAudio {
     if (!["i3", "i4", "i6"].includes(profile)) throw new RangeError("Invalid sound profile");
     this.profile = profile;
     this.worklet?.port.postMessage({ type: "setProfile", profileId: profile });
+  }
+
+  /** Change listening position without altering vehicle physics or ignition. */
+  setListenerMode(mode: AudioListenerMode): void {
+    if (mode !== "CABIN" && mode !== "ENGINE_BAY")
+      throw new RangeError("Unsupported listening mode");
+    this.listenerMode = mode;
+  }
+
+  /** Approximate tyre surface texture: 0 smooth through 1 coarse. */
+  setRoadRoughness(roughness: number): void {
+    if (!Number.isFinite(roughness) || roughness < 0 || roughness > 1)
+      throw new RangeError("Invalid road roughness");
+    this.roadRoughness = roughness;
   }
 
   async start(): Promise<void> {
@@ -70,7 +86,7 @@ export class EngineAudio {
   update(state: DriveState, throttleInput = state.load): void {
     if (!this.active || !this.context) return;
     const now = this.context.currentTime;
-    const telemetry = toAudioTelemetry(state, throttleInput);
+    const telemetry = toAudioTelemetry(state, throttleInput, this.listenerMode);
     if (this.worklet) {
       const set = (name: string, value: number, smoothing: number) =>
         this.worklet?.parameters.get(name)?.setTargetAtTime(value, now, smoothing);
@@ -90,6 +106,10 @@ export class EngineAudio {
       set("electricProfile", telemetry.electricProfile, 0.075);
       set("iceProfile", telemetry.iceProfile, 0.090);
       set("engineMotoring", telemetry.engineMotoringAmplitude, 0.028);
+      // Perspective ID is categorical; the DSP smooths the transition.
+      this.worklet.parameters.get("listenerMode")?.setValueAtTime(
+        telemetry.listenerMode === "ENGINE_BAY" ? 1 : 0, now);
+      set("roadRoughness", this.roadRoughness, 0.10);
     } else {
       const cylinders = this.profile === "i3" ? 3 : this.profile === "i6" ? 6 : 4;
       const hz = telemetry.combustionGate
@@ -99,7 +119,8 @@ export class EngineAudio {
       this.master?.gain.setTargetAtTime(telemetry.combustionGate ? 0.32 :
         Math.min(0.14, Math.abs(telemetry.tractionPowerKw) / 400), now, 0.06);
       this.filter?.frequency.setTargetAtTime(
-        400 + 2400 * telemetry.engineLoad, now, 0.05);
+        (this.listenerMode === "ENGINE_BAY" ? 1200 : 400) +
+          2400 * telemetry.engineLoad, now, 0.05);
     }
   }
 

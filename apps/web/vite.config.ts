@@ -13,7 +13,8 @@ const publicFiles = [
   "engine-worklet.js",
   "synth-core.js",
   "electric-synth.js",
-  "ice-acoustics.js"
+  "ice-acoustics.js",
+  "cabin-soundstage.js"
 ];
 
 /**
