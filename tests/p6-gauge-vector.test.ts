@@ -68,7 +68,13 @@ test("P6 display remains a read-only adapter; no fabricated fuel or range values
   assert.equal(resolveGaugeLayout("aura_fe13_epower","AURA_ENHANCED"),"AURA_ENHANCED");
   assert.equal(resolveGaugeLayout("prius_60_hev","AURA_ENHANCED"),"PRIUS");
   const source=readFileSync(new URL("../apps/web/src/gauge-ui.ts",import.meta.url),"utf8");
-  assert.ok(!/fuel.?level|fuel.?range|outside.?temp|trip.?odometer/i.test(source));
+  const begin=source.indexOf("panels.innerHTML =");
+  const end=source.indexOf("dial.insertAdjacentElement",begin);
+  assert.ok(begin >= 0 && end > begin);
+  const template=source.slice(begin,end);
+  // Check displayed fields, not comments describing why unavailable data
+  // such as temperature and odometer are intentionally not shown.
+  assert.ok(!/fuel.?level|fuel.?range|outside.?temp|trip.?odometer/i.test(template));
 });
 test("P6 Aura is a 3-column cluster at every responsive breakpoint", () => {
   const css=readFileSync(new URL("../apps/web/src/style.css",import.meta.url),"utf8");
