@@ -260,3 +260,19 @@ body{overscroll-behavior-x:none}
  .aura-energy-caption{font-size:9px}
  .cluster-tiny{font-size:8px}
 }
+
+/* P6.1: Enhanced originally allocated so much space to the center that
+   the 390/430px POWER and SPEED rings shrank to ~90px. Reserve two
+   readable outside dials, while styling the center as the focus. */
+@media(min-width:361px) and (max-width:430px){
+ .gauge-aura.enhanced .aura-cluster-body{
+  grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,1fr);
+  gap:1px
+ }
+ .gauge-aura.enhanced .aura-center-panel{
+  padding:4px 2px;
+  background:linear-gradient(180deg,#26334988,#111d3099);
+  border-inline:1px solid #52617b
+ }
+ .gauge-aura.enhanced .aura-energy-route{max-height:56px}
+}
