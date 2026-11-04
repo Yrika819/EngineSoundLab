@@ -16,3 +16,6 @@ Full details: [Implementation plan](IMPLEMENTATION_PLAN.md).
 
 
 **P5-B acoustic DSP slice:** independent inline-four Prius and inline-three Aura combustion timbre profiles plus engine motoring layer; objective synthesis tests and regression checks. OEM acoustic matching and physical-device listening remain later QA.
+
+
+P5-C acoustic slice: electric traction/generator/starter/regen source separation, signed torque and high-order anti-aliasing implemented. Physical-phone A/B and cabin EQ remain in P5-D/E.

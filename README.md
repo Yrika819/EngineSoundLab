@@ -97,3 +97,12 @@ TypeScript、Web Audio API / AudioWorklet、SVG または Canvas、Vite を想�
 - [Simscape Hybrid Electric Vehicle Model](https://github.com/mathworks/Simscape-Hybrid-Electric-Vehicle-Model) — 動力分割HEVの構造的参考（コード流用には制限あり）
 
 これらのコードや録音は未取り込み。自作部分のライセンスは別途確定する。
+
+## P5-C: 独立した電動モーター・発電機・回生音（試作）
+
+- **プリウス：** MG2駆動・回生、MG1発電・エンジン始動を別々の合成音源で表現。
+- **オーラ：** EM47駆動と独立した発電機の音、非燃焼での回転音を表現。エンジンから車輪への機械駆動経路は追加しません。
+- トルクの正負で音色を変え、減速ギアとインバーター相当の高周波成分を分離。高回転の高次成分はサンプリング周波数に応じて減衰し、折り返し雑音を抑えます。
+- **注意：** モーターの極数・PWM周波数・減速機の歯数や実車の音圧は未測定です。設定は合成用の推定値で、実車音との聴感比較はP5-Eで行います。録音音源は一切使用しません。
+
+[詳しい音響設計・検証内容](docs/P5_C_ELECTRIC_ACOUSTICS.md)

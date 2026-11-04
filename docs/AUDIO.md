@@ -90,3 +90,12 @@ Raw fuel-off now prohibits any new firing impulse immediately, even while the co
 New tests verify 365Hz and 90Hz steady-state filter transfer, distinct Prius/Aura mid-band gains, 44.1/48/96kHz filter stability, no new fuel-cut ignition pulses, and bounded output during transitions. Browser and PWA functionality stay unchanged. User listening comparisons with real cabin recordings are still pending.
 
 Reference: https://car.watch.impress.co.jp/docs/event_repo/2023aee/1503945.html and https://www.nissan-global.com/JP/INNOVATION/TECHNOLOGY/ARCHIVE/HR12DE/.
+
+## P5-C: distinct motor/generator motoring, torque sign and alias protection
+
+- Updated `electric-synth.js` now provides individual (inspectable) traction electromagnetic, reduction-gear, inverter carrier, regen, generator and starter/motoring components. These voices stay independent of combustion.
+- P5-A's `tractionMotorTorqueNm` is normalized to signed `motorTorqueNormalized`, and STARTING/non-fuelled rotation is normalized to `generatorMotoringAmplitude`. These separate `motorTorque` [-1,+1] and `generatorMotoring` [0,1] Web Audio parameters are distinct from positive electrical generation.
+- Prius MG1 and MG2 use separate shaft speeds; the Aura generator and traction motor also remain independent, without any new mechanical engine-to-wheel path. Profile orders/inverter carriers are **estimated synthesis parameters**, not OEM machine poles, PWM maps, gear counts or measurements.
+- Above-Nyquist upper harmonics fade out rather than folding into the audible range. Profile/audio gain are interpolated; the audio loop does not allocate per-sample objects. Output remains covered by the existing compressor/soft limiter.
+- The old 6-argument `ElectricDriveSynth.next()` remains backward compatible. New optional arguments are signed torque and generator motoring; `EngineSynthCore.next()` appends them after the existing P5-B fields.
+- Validation: `tests/p5c-electric-machine.test.mjs`, `tests/p5c-electric-telemetry.test.ts`, `tests/worklet-bridge.test.mjs`, and PWA production build. A passing test proves signal routing and DSP stability, **not actual Prius/Aura sound authenticity**.
